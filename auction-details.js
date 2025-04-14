@@ -192,7 +192,7 @@ bidForm.addEventListener('submit', async (e) => {
     {
       auction_id: auctionId,
       bidder_id: userId,
-      bid_amount: bidAmount,
+      bid_amount: bidAmount,  // Make sure we're using 'bid_amount' here
     },
   ]);
 
@@ -290,45 +290,25 @@ document.addEventListener('DOMContentLoaded', () => {
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .order('created_at', { ascending: false });
 
     if (error || !data) {
-      list.innerHTML = '<li>Error loading notifications</li>';
-      return;
-    }
-
-    if (data.length === 0) {
-      list.innerHTML = '<li>No notifications</li>';
+      list.innerHTML = '<li>❌ Failed to load notifications</li>';
       return;
     }
 
     list.innerHTML = '';
-    let unreadCount = 0;
+    for (const notification of data) {
+      const item = document.createElement('li');
+      item.classList.add('notification-item');
+      item.innerHTML = `${notification.message} <span>${new Date(notification.created_at).toLocaleTimeString()}</span>`;
+      list.appendChild(item);
 
-    data.forEach(n => {
-      const li = document.createElement('li');
-      li.textContent = n.message;
-      list.appendChild(li);
-      if (!n.read) unreadCount++;
-    });
-
-    if (unreadCount > 0 && list.classList.contains('hidden')) {
-      badge.textContent = unreadCount;
-      badge.classList.remove('hidden');
-    }
-
-    if (markAsRead && unreadCount > 0) {
-      const unreadIds = data.filter(n => !n.read).map(n => n.id);
-      if (unreadIds.length > 0) {
-        await supabaseClient
-          .from('notifications')
-          .update({ read: true })
-          .in('id', unreadIds);
+      if (markAsRead) {
+        await supabaseClient.from('notifications').update({ read: true }).eq('id', notification.id);
       }
     }
   }
 
   loadNotifications();
-  setInterval(() => loadNotifications(), 15000);
 });
