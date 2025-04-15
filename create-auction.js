@@ -1,266 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Create Auction - HammerHub</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #000;
-      color: #fff;
+import { supabaseClient } from './supabase.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadCategories();
+  autoFillEndTime();
+  setupImagePreview();
+  document.getElementById('create-auction-form').addEventListener('submit', handleCreateAuction);
+});
+
+function autoFillEndTime() {
+  const endInput = document.getElementById('end-time');
+  const now = new Date();
+  now.setDate(now.getDate() + 7); // +7 days
+  endInput.value = now.toISOString().slice(0, 16);
+}
+
+async function loadCategories() {
+  const select = document.getElementById('category-select');
+  const { data, error } = await supabaseClient.from('category').select('id, name');
+
+  if (error) {
+    console.error('❌ Failed to load categories:', error);
+    return;
+  }
+
+  data.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category.id;
+    option.textContent = category.name;
+    select.appendChild(option);
+  });
+}
+
+function setupImagePreview() {
+  const fileInput = document.getElementById('product-image');
+  const previewDiv = document.getElementById('image-preview');
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    previewDiv.innerHTML = '';
+
+    if (!file) return;
+
+    // Validate file size (max 3MB)
+    const maxSize = 3 * 1024 * 1024;
+    if (file.size > maxSize) {
+      previewDiv.innerHTML = `<p style="color: red;">❌ Image too large (max 3MB)</p>`;
+      fileInput.value = '';
+      return;
     }
 
-    header {
-      background-color: #111;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #222;
+    // Validate image type
+    if (!file.type.startsWith('image/')) {
+      previewDiv.innerHTML = `<p style="color: red;">❌ Invalid image type</p>`;
+      fileInput.value = '';
+      return;
     }
 
-    .logo {
-      height: 40px;
-      cursor: pointer;
-    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.maxWidth = '200px';
+      img.style.marginTop = '10px';
+      previewDiv.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
-    .auth-buttons {
-      display: flex;
-      gap: 1rem;
-    }
+async function handleCreateAuction(event) {
+  event.preventDefault();
+  const statusMessage = document.getElementById('status-message');
+  statusMessage.textContent = '⏳ Creating auction...';
 
-    .auth-btn {
-      background-color: #222;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+  const name = document.getElementById('product-name').value.trim();
+  const description = document.getElementById('product-description').value.trim();
+  const categoryId = document.getElementById('category-select').value;
+  const imageFile = document.getElementById('product-image').files[0];
+  const startingPrice = parseFloat(document.getElementById('starting-price').value);
+  const endTime = document.getElementById('end-time').value;
 
-    .auth-btn.primary {
-      background-color: #facc15;
-      color: #000;
-      font-weight: 600;
-    }
+  if (!imageFile || isNaN(startingPrice) || !name || !description || !categoryId || !endTime) {
+    statusMessage.textContent = '❌ Please fill in all fields.';
+    return;
+  }
 
-    main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 3rem 1rem;
-      gap: 2rem;
-    }
+  if (startingPrice <= 0) {
+    statusMessage.textContent = '❌ Starting price must be greater than 0.';
+    return;
+  }
 
-    #create-auction-form {
-      background-color: #1a1a1a;
-      padding: 2rem;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-      animation: fadeIn 0.8s ease;
-    }
+  const { data: userData, error: authError } = await supabaseClient.auth.getUser();
+  const sellerId = userData?.user?.id;
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+  if (authError || !sellerId) {
+    statusMessage.textContent = '❌ You must be logged in to create an auction.';
+    return;
+  }
 
-    #create-auction-form h2 {
-      text-align: center;
-      color: #facc15;
-      margin-bottom: 1.5rem;
-    }
+  // Upload image
+  const fileName = `${Date.now()}-${imageFile.name}`;
+  const { error: uploadError } = await supabaseClient.storage
+    .from('product-images')
+    .upload(fileName, imageFile);
 
-    .form-group {
-      position: relative;
-      margin-bottom: 1rem;
-    }
+  if (uploadError) {
+    console.error('Image upload error:', uploadError);
+    statusMessage.textContent = '❌ Failed to upload image.';
+    return;
+  }
 
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 0.75rem 2.5rem 0.75rem 1rem;
-      background-color: #000;
-      border: 1px solid #444;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 1rem;
-      transition: border-color 0.2s ease;
-    }
+  const imageUrl = `https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName}`;
 
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      border-color: #facc15;
-      outline: none;
-    }
+  // Insert product
+  const { data: productData, error: productError } = await supabaseClient.from('product').insert([{
+    name,
+    description,
+    image_url: imageUrl,
+    category_id: categoryId
+  }]).select().single();
 
-    .form-group i {
-      position: absolute;
-      right: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #888;
-    }
+  if (productError) {
+    console.error('Product insert error:', productError);
+    statusMessage.textContent = '❌ Failed to create product.';
+    return;
+  }
 
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+  const productId = productData.id;
 
-    #image-preview img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-    }
+  // Insert auction
+  const { data: auctionData, error: auctionError } = await supabaseClient.from('auction').insert([{
+    product_id: productId,
+    seller_id: sellerId,
+    starting_price: startingPrice,
+    current_price: startingPrice,
+    end_time: endTime,
+    status: 'active'
+  }]).select().single();
 
-    button[type="submit"] {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #facc15;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease;
-    }
+  if (auctionError) {
+    console.error('Auction insert error:', auctionError);
+    statusMessage.textContent = '❌ Failed to create auction.';
+    return;
+  }
 
-    button[type="submit"]:hover {
-      background-color: #eab308;
-    }
-
-    #status-message {
-      text-align: center;
-      margin-top: 1rem;
-      font-weight: 500;
-    }
-
-    .preview-card {
-      background-color: #1a1a1a;
-      padding: 1rem;
-      border-radius: 12px;
-      max-width: 300px;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-      text-align: center;
-      animation: fadeIn 0.5s ease-in-out;
-    }
-
-    .preview-card img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-
-    .spinner {
-      border: 4px solid #fff;
-      border-top: 4px solid #facc15;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
-    <div class="auth-buttons" id="auth-buttons">
-      <div class="notification-wrapper">
-        <span id="notification-bell" class="notification-bell">🔔</span>
-        <span id="notification-badge" class="notification-badge hidden">0</span>
-        <ul id="notification-list" class="notification-list hidden"></ul>
-      </div>
-  
-      <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
-      <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
-      <button class="auth-btn primary" onclick="logout()">Logout</button>
-    </div>
-  </header>
-
-  <main>
-    <form id="create-auction-form">
-      <h2>Create Auction</h2>
-
-      <div class="form-group">
-        <input type="text" id="product-name" placeholder="Product Name" required />
-        <i></i>
-      </div>
-
-      <div class="form-group">
-        <textarea id="product-description" placeholder="Product Description" required></textarea>
-        <i></i>
-      </div>
-
-      <div class="form-group">
-        <select id="category-select" required>
-          <option value="">Select Category</option>
-        </select>
-        <i></i>
-      </div>
-
-      <div class="form-group">
-        <input type="file" id="product-image" accept="image/*" required />
-        <i></i>
-      </div>
-      <div id="image-preview"></div>
-
-      <div class="form-group">
-        <input type="number" id="starting-price" placeholder="Starting Price (₹)" min="1" required />
-        <i></i>
-      </div>
-
-      <div class="form-group">
-        <input type="datetime-local" id="end-time" required />
-        <i></i>
-      </div>
-
-      <button type="submit" id="submit-button">Create Auction</button>
-      <div id="status-message"></div>
-    </form>
-
-    <!-- Live Preview -->
-    <div class="preview-card" id="live-preview" style="display:none;">
-      <img id="preview-image" src="" alt="Preview Image" />
-      <h3 id="preview-title"></h3>
-      <p id="preview-price"></p>
-    </div>
-  </main>
-
-  <footer>
-    <p>© 2025 HammerHub. All rights reserved.</p>
-    <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
-  </footer>
-
-  <script type="module" src="create-auction.js"></script>
-  <script>
-    document.getElementById('logo-home').addEventListener('click', () => {
-      window.location.href = 'homepage.html';
-    });
-
-    // Define logout function to use inline in button
-    async function logout() {
-      const { supabaseClient } = await import('./supabase.js');
-      await supabaseClient.auth.signOut();
-      window.location.href = 'login.html';
-    }
-  </script>
-
-</body>
-</html>
+  statusMessage.textContent = '✅ Auction created! Redirecting...';
+  setTimeout(() => {
+    window.location.href = `auction-details.html?id=${auctionData.id}`;
+  }, 1500);
+}
