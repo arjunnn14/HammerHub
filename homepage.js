@@ -153,5 +153,12 @@ async function logout() {
   }
 }
 
+async function callUpdateAuctionWinners() {
+    const { error } = await supabase.rpc('update_auction_winners')
+    if (error) console.error('Error:', error)
+    else console.log('Auction status updated')
+}
+setInterval(callUpdateAuctionWinners, 60 * 1000)
+
 // 🛎️ Notifications (You can keep or update this function as needed)
 import { loadNotifications } from './notification.js';
