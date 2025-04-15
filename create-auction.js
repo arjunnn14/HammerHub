@@ -82,7 +82,11 @@ async function handleCreateAuction(event) {
   const name = document.getElementById('product-name').value.trim();
   const description = document.getElementById('product-description').value.trim();
   const categoryId = document.getElementById('category-select').value;
-  const imageFile = document.getElementById('product-image').files[0];
+  const imageFileInput = document.getElementById('product-image');
+  
+  // Check if the image file input exists and has a selected file
+  const imageFile = imageFileInput ? imageFileInput.files[0] : null;
+
   const startingPrice = parseFloat(document.getElementById('starting-price').value);
   const endTime = document.getElementById('end-time').value;
 
@@ -103,6 +107,59 @@ async function handleCreateAuction(event) {
     statusMessage.textContent = '❌ You must be logged in to create an auction.';
     return;
   }
+
+  // Upload image
+  const fileName = `${Date.now()}-${imageFile.name}`;
+  const { error: uploadError } = await supabaseClient.storage
+    .from('product-images')
+    .upload(fileName, imageFile);
+
+  if (uploadError) {
+    console.error('Image upload error:', uploadError);
+    statusMessage.textContent = '❌ Failed to upload image.';
+    return;
+  }
+
+  const imageUrl = `https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName}`;
+
+  // Insert product
+  const { data: productData, error: productError } = await supabaseClient.from('product').insert([{
+    name,
+    description,
+    image_url: imageUrl,
+    category_id: categoryId
+  }]).select().single();
+
+  if (productError) {
+    console.error('Product insert error:', productError);
+    statusMessage.textContent = '❌ Failed to create product.';
+    return;
+  }
+
+  const productId = productData.id;
+
+  // Insert auction
+  const { data: auctionData, error: auctionError } = await supabaseClient.from('auction').insert([{
+    product_id: productId,
+    seller_id: sellerId,
+    starting_price: startingPrice,
+    current_price: startingPrice,
+    end_time: endTime,
+    status: 'active'
+  }]).select().single();
+
+  if (auctionError) {
+    console.error('Auction insert error:', auctionError);
+    statusMessage.textContent = '❌ Failed to create auction.';
+    return;
+  }
+
+  statusMessage.textContent = '✅ Auction created! Redirecting...';
+  setTimeout(() => {
+    window.location.href = `auction-details.html?id=${auctionData.id}`;
+  }, 1500);
+}
+
 
   // Upload image
   const fileName = `${Date.now()}-${imageFile.name}`;
