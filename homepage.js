@@ -240,7 +240,7 @@ async function updateAuctionStatus() {
 // Run the function to check auctions and update status
 updateAuctionStatus();
 setInterval(() => {
-  updateAllAuctionStatuses();
+  updateAuctionStatus();
 }, 10000); // every 10 seconds
 
 document.addEventListener('DOMContentLoaded', () => {
