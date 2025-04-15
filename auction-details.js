@@ -151,6 +151,7 @@ function startCountdown() {
 }
 
 async function updateAuctionWinner() {
+  // Step 1: Get the latest bid for this auction
   const { data: bids, error: bidError } = await supabaseClient
     .from('bid')
     .select('bidder_id')
@@ -158,18 +159,32 @@ async function updateAuctionWinner() {
     .order('created_at', { ascending: false })
     .limit(1);
 
-  if (bidError) return console.error('Error fetching bid:', bidError);
-  if (!bids.length) return;
+  if (bidError) {
+    console.error('❌ Error fetching latest bid:', bidError);
+    return;
+  }
+
+  if (!bids || bids.length === 0) {
+    console.log('⚠️ No bids placed on this auction.');
+    return;
+  }
 
   const winningBidderId = bids[0].bidder_id;
 
+  // Step 2: Update auction table with winner_id and completed status
   const { error: updateError } = await supabaseClient
     .from('auction')
-    .update({ winner_id: winningBidderId, status: 'completed' })
+    .update({
+      winner_id: winningBidderId,
+      status: 'completed'
+    })
     .eq('id', auctionId);
 
-  if (updateError) console.error('Error updating auction:', updateError);
-  else console.log('Auction winner updated successfully!');
+  if (updateError) {
+    console.error('❌ Error updating auction:', updateError);
+  } else {
+    console.log(`✅ Auction ${auctionId} marked completed with winner ID ${winningBidderId}`);
+  }
 }
 
 function startPricePolling() {
