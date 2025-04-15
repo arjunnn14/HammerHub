@@ -5,21 +5,27 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSearch();
   setupCategoryFilter();
   checkAuthButtons();
-  loadNotifications();
-  callUpdateAuctionWinners();
 });
 
 // 🔥 Fetch Auctions & Remove Expired Ones
 async function fetchFeaturedAuctions(matchingProductIds = null) {
   const auctionList = document.getElementById('auction-list');
+  const heading = document.getElementById('greeting-text');
   auctionList.innerHTML = 'Loading auctions...';
+
+  // If explicitly empty list passed, exit early
+  if (matchingProductIds && matchingProductIds.length === 0) {
+    heading.innerText = 'No Live Auctions';
+    auctionList.innerHTML = 'No auctions found.';
+    return;
+  }
 
   let query = supabaseClient
     .from('auction')
     .select('id, current_price, end_time, product:product!auction_product_id_fkey(name, image_url, id, category_id)')
     .order('end_time', { ascending: true });
 
-  if (matchingProductIds && matchingProductIds.length > 0) {
+  if (matchingProductIds) {
     query = query.in('product_id', matchingProductIds);
   }
 
@@ -28,6 +34,7 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
   if (error) {
     console.error('❌ Fetch error:', error);
     auctionList.innerHTML = 'Failed to load auctions.';
+    heading.innerText = 'Auction Error';
     return;
   }
 
@@ -35,11 +42,14 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
   const validAuctions = data.filter(auction => new Date(auction.end_time) > now);
 
   if (validAuctions.length === 0) {
-    auctionList.innerHTML = 'No matching auctions found.';
+    heading.innerText = 'No Live Auctions';
+    auctionList.innerHTML = 'No auctions found.';
     return;
   }
 
+  heading.innerText = 'Live Auctions';
   auctionList.innerHTML = '';
+
   validAuctions.forEach(auction => {
     const div = document.createElement('div');
     div.className = 'auction-card';
@@ -54,6 +64,7 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
     auctionList.appendChild(div);
   });
 }
+
 
 // 🔍 Search Functionality
 function setupSearch() {
@@ -154,13 +165,9 @@ async function logout() {
   }
 }
 
-async function callUpdateAuctionWinners() {
-  const { error } = await supabaseClient.rpc('update_auction_winners') // ✅ use supabaseClient
-  if (error) console.error('Error:', error)
-  else console.log('Auction status updated')
-}
-setInterval(callUpdateAuctionWinners, 60 * 1000)
-callUpdateAuctionWinners()
-
 // 🛎️ Notifications (You can keep or update this function as needed)
 import { loadNotifications } from './notification.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNotifications();
+});
