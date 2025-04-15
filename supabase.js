@@ -5,77 +5,73 @@ const supabaseUrl = "https://jzcmbrqogyghyhvwzgps.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6Y21icnFvZ3lnaHlodnd6Z3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjA0MzUsImV4cCI6MjA1OTc5NjQzNX0.2Cc_QdoHU_Q72XFKmhRD0bvOnx4t2UswWy5lK_w8aj4";
 export const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-// Function to update status for all auctions
-async function updateAllAuctionStatuses() {
+// ✅ Function to update all auction statuses
+export async function updateAllAuctionStatuses() {
   try {
-    // Step 1: Get the current time
-    const now = new Date().toISOString();  // ISO format string
+    const now = new Date().toISOString();
 
-    // Step 2: Fetch all auctions where the end_time is before the current time and the status is not 'completed'
-    const { data: auctions, error } = await supabase
+    const { data: auctions, error } = await supabaseClient
       .from('auction')
       .select('id, end_time, status')
-      .lt('end_time', now) // Auctions that ended before the current time
-      .neq('status', 'completed'); // Only those that are not already 'completed'
+      .lt('end_time', now)
+      .neq('status', 'completed');
 
     if (error) {
-      console.error('Error fetching auctions:', error);
+      console.error('❌ Error fetching auctions:', error);
       return;
     }
 
-    // Step 3: Process each auction and update it
     for (const auction of auctions) {
-      // Get the highest bid for this auction
-      const { data: topBid, error: bidError } = await supabase
+      const { data: topBid, error: bidError } = await supabaseClient
         .from('bid')
         .select('bidder_id')
         .eq('auction_id', auction.id)
-        .order('bid_amount', { ascending: false })  // Highest bid first
+        .order('bid_amount', { ascending: false })
         .limit(1)
-        .single(); // Get only one (highest) bid
+        .single();
 
-      if (bidError) {
-        console.error('Error fetching bid for auction ' + auction.id, bidError);
+      if (bidError && bidError.code !== 'PGRST116') {  // Skip "No rows found"
+        console.error(`❌ Error fetching bid for auction ${auction.id}:`, bidError);
         continue;
       }
 
       if (topBid) {
-        // Step 4a: Update auction to 'completed' and set the winner
-        const { error: updateError } = await supabase
+        // 🥇 There was a winning bid
+        const { error: updateError } = await supabaseClient
           .from('auction')
           .update({
             status: 'completed',
-            winner_id: topBid.bidder_id,  // Set winner_id to the bidder's id
+            winner_id: topBid.bidder_id,
           })
           .eq('id', auction.id);
 
         if (updateError) {
-          console.error('Error updating auction status for auction ' + auction.id, updateError);
+          console.error(`❌ Error updating auction ${auction.id} with winner:`, updateError);
         } else {
-          console.log(`Auction ${auction.id} updated as completed. Winner: ${topBid.bidder_id}`);
+          console.log(`✅ Auction ${auction.id} completed with winner ${topBid.bidder_id}`);
         }
       } else {
-        // Step 4b: If no bids, mark auction as 'completed' without a winner
-        const { error: updateErrorNoBid } = await supabase
+        // 🚫 No bids
+        const { error: updateErrorNoBid } = await supabaseClient
           .from('auction')
-          .update({
-            status: 'completed',
-          })
+          .update({ status: 'completed' })
           .eq('id', auction.id);
 
         if (updateErrorNoBid) {
-          console.error('Error updating auction status (no bids) for auction ' + auction.id, updateErrorNoBid);
+          console.error(`❌ Error updating auction ${auction.id} (no bids):`, updateErrorNoBid);
         } else {
-          console.log(`Auction ${auction.id} updated as completed (no bids).`);
+          console.log(`✅ Auction ${auction.id} completed (no bids)`);
         }
       }
     }
 
-    console.log('All auctions checked and updated.');
-  } catch (error) {
-    console.error('Error in updating auctions:', error);
+    console.log('🎯 All ended auctions updated.');
+  } catch (err) {
+    console.error('💥 Fatal error in updateAllAuctionStatuses:', err);
   }
 }
 
-// Call the function directly (for testing)
-updateAllAuctionStatuses();
+// 💡 Call this in another file or attach to a button for manual trigger
+// Example:
+// import { updateAllAuctionStatuses } from './supabase.js';
+// updateAllAuctionStatuses();
