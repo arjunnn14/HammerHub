@@ -110,7 +110,6 @@
     <div class="auth-buttons">
       <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
-      <button class="auth-btn primary" onclick="logout()">Logout</button>
     </div>
   </header>
 
@@ -172,11 +171,5 @@
     </div>
   </footer>
   <script type="module" src="watchlist.js"></script>
-  <script>
-    function logout() {
-      localStorage.clear();
-      window.location.href = 'login.html';
-    }
-  </script>
 </body>
 </html>
