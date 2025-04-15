@@ -113,6 +113,9 @@
     </div>
     <button class="auth-btn" id="notification-button">🔔</button>
     <div class="auth-buttons" id="auth-buttons">
+      <div id="notification-panel" style="display: none; position: absolute; top: 40px; right: 10px; background: #fff; color: #000; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2);">
+        <p>No new notifications</p>
+      </div>
       <button class="auth-btn primary" onclick="window.location.href='login.html'">Log In</button>
       <button class="auth-btn primary" onclick="window.location.href='signup.html'">Sign Up</button>
     </div>
@@ -185,7 +188,19 @@
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
-
   <script type="module" src="homepage.js"></script>
+  <script>  document.addEventListener("DOMContentLoaded", function () {
+    const bell = document.getElementById("notification-button");
+    const panel = document.getElementById("notification-panel");
+
+    bell.addEventListener("click", function () {
+      if (panel.style.display === "none" || panel.style.display === "") {
+        panel.style.display = "block";
+      } else {
+        panel.style.display = "none";
+      }
+    });
+  });
+</script>
 </body>
 </html>
