@@ -1,159 +1,156 @@
 import { supabaseClient } from './supabase.js';
-import { sendNotification } from './notification.js';  // Import the notification function
+import { loadNotifications } from './notification.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadCategories();
-  autoFillEndTime();
-  setupImagePreview();
-  document.getElementById('create-auction-form').addEventListener('submit', handleCreateAuction);
+  fetchFeaturedAuctions();
+  setupSearch();
+  setupCategoryFilter();
+  checkAuthButtons();
+  loadNotifications();
 });
 
-function autoFillEndTime() {
-  const endInput = document.getElementById('end-time');
-  const now = new Date();
-  now.setDate(now.getDate() + 7); // +7 days
-  endInput.value = now.toISOString().slice(0, 16);
-}
+// 🔥 Fetch Auctions & Remove Expired Ones
+async function fetchFeaturedAuctions(matchingProductIds = null) {
+  const auctionList = document.getElementById('auction-list');
+  auctionList.innerHTML = 'Loading auctions...';
 
-async function loadCategories() {
-  const select = document.getElementById('category-select');
-  const { data, error } = await supabaseClient.from('category').select('id, name');
+  let query = supabaseClient
+    .from('auction')
+    .select('id, current_price, end_time, product:product!auction_product_id_fkey(name, image_url, id, category_id)')
+    .order('end_time', { ascending: true });
+
+  if (matchingProductIds && matchingProductIds.length > 0) {
+    query = query.in('product_id', matchingProductIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
-    console.error('❌ Failed to load categories:', error);
+    console.error('❌ Fetch error:', error);
+    auctionList.innerHTML = 'Failed to load auctions.';
     return;
   }
 
-  data.forEach(category => {
-    const option = document.createElement('option');
-    option.value = category.id;
-    option.textContent = category.name;
-    select.appendChild(option);
+  const now = new Date();
+  const validAuctions = data.filter(auction => new Date(auction.end_time) > now);
+
+  if (validAuctions.length === 0) {
+    auctionList.innerHTML = 'No matching auctions found.';
+    return;
+  }
+
+  auctionList.innerHTML = '';
+  validAuctions.forEach(auction => {
+    const div = document.createElement('div');
+    div.className = 'auction-card';
+
+    div.innerHTML = `
+      <img src="${auction.product?.image_url || 'placeholder.jpg'}" alt="${auction.product?.name || 'No Name'}" class="auction-thumb" />
+      <h3>${auction.product?.name || 'Unnamed Product'}</h3>
+      <p>Current Bid: ₹${auction.current_price}</p>
+      <button class="yellow-btn" onclick="location.href='auction-details.html?id=${auction.id}'">View Auction</button>
+    `;
+
+    auctionList.appendChild(div);
   });
 }
 
-function setupImagePreview() {
-  const fileInput = document.getElementById('product-image');
-  const previewDiv = document.getElementById('image-preview');
+// 🔍 Search Functionality
+function setupSearch() {
+  const searchInput = document.querySelector('.search-container input');
+  searchInput.addEventListener('input', async () => {
+    const query = searchInput.value.trim().toLowerCase();
 
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    previewDiv.innerHTML = '';
-
-    if (!file) return;
-
-    // Validate file size (max 3MB)
-    const maxSize = 3 * 1024 * 1024;
-    if (file.size > maxSize) {
-      previewDiv.innerHTML = <p style="color: red;">❌ Image too large (max 3MB)</p>;
-      fileInput.value = '';
+    if (query === '') {
+      fetchFeaturedAuctions(); // Show all
       return;
     }
 
-    // Validate image type
-    if (!file.type.startsWith('image/')) {
-      previewDiv.innerHTML = <p style="color: red;">❌ Invalid image type</p>;
-      fileInput.value = '';
+    const { data: products, error } = await supabaseClient
+      .from('product')
+      .select('id, name')
+      .ilike('name', %${query}%);
+
+    if (error) {
+      console.error('❌ Product search error:', error);
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.style.maxWidth = '200px';
-      img.style.marginTop = '10px';
-      previewDiv.appendChild(img);
-    };
-    reader.readAsDataURL(file);
+    const matchingIds = products.map(p => p.id);
+    fetchFeaturedAuctions(matchingIds);
   });
 }
 
-async function handleCreateAuction(event) {
-  event.preventDefault();
-  const statusMessage = document.getElementById('status-message');
-  statusMessage.textContent = '⏳ Creating auction...';
+// 📂 Category Filter (Fixed .single() issue)
+function setupCategoryFilter() {
+  const categoryLinks = document.querySelectorAll('#category-list a');
 
-  const name = document.getElementById('product-name').value.trim();
-  const description = document.getElementById('product-description').value.trim();
-  const categoryId = document.getElementById('category-select').value;
-  const imageFile = document.getElementById('product-image').files[0];
-  const startingPrice = parseFloat(document.getElementById('starting-price').value);
-  const endTime = document.getElementById('end-time').value;
+  categoryLinks.forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
 
-  if (!imageFile || isNaN(startingPrice) || !name || !description || !categoryId || !endTime) {
-    statusMessage.textContent = '❌ Please fill in all fields.';
-    return;
+      categoryLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      const selectedCategory = link.dataset.category;
+
+      const { data: categories, error: categoryError } = await supabaseClient
+        .from('category')
+        .select('id')
+        .eq('name', selectedCategory);
+
+      if (categoryError || !categories || categories.length === 0) {
+        console.error('❌ Category fetch error:', categoryError);
+        return;
+      }
+
+      const category = categories[0];
+
+      const { data: products, error: productError } = await supabaseClient
+        .from('product')
+        .select('id')
+        .eq('category_id', category.id);
+
+      if (productError) {
+        console.error('❌ Product fetch error:', productError);
+        return;
+      }
+
+      const productIds = products.map(p => p.id);
+      fetchFeaturedAuctions(productIds);
+    });
+  });
+}
+
+// 👤 Auth Buttons Handling
+async function checkAuthButtons() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const authButtons = document.querySelector('.auth-buttons');
+
+  if (session && session.user) {
+    authButtons.innerHTML = `
+      <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
+      <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+      <button class="auth-btn" id="profile-btn">👤 Profile</button>
+      <button class="auth-btn primary" id="logout-btn">Logout</button>
+    `;
+
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('profile-btn').addEventListener('click', () => {
+      window.location.href = 'profile.html';
+    });
+    document.getElementById('create-auction-btn').addEventListener('click', () => {
+      window.location.href = 'create-auction.html';
+    });
   }
+}
 
-  if (startingPrice <= 0) {
-    statusMessage.textContent = '❌ Starting price must be greater than 0.';
-    return;
+// 🚪 Logout
+async function logout() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    console.error('Logout failed:', error.message);
+  } else {
+    window.location.reload();
   }
-
-  const { data: userData, error: authError } = await supabaseClient.auth.getUser();
-  const sellerId = userData?.user?.id;
-
-  if (authError || !sellerId) {
-    statusMessage.textContent = '❌ You must be logged in to create an auction.';
-    return;
-  }
-
-  // Upload image
-  const fileName = ${Date.now()}-${imageFile.name};
-  const { error: uploadError } = await supabaseClient.storage
-    .from('product-images')
-    .upload(fileName, imageFile);
-
-  if (uploadError) {
-    console.error('Image upload error:', uploadError);
-    statusMessage.textContent = '❌ Failed to upload image.';
-    return;
-  }
-
-  const imageUrl = https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName};
-
-  // Insert product
-  const { data: productData, error: productError } = await supabaseClient.from('product').insert([{
-    name,
-    description,
-    image_url: imageUrl,
-    category_id: categoryId
-  }]).select().single();
-
-  if (productError) {
-    console.error('Product insert error:', productError);
-    statusMessage.textContent = '❌ Failed to create product.';
-    return;
-  }
-
-  const productId = productData.id;
-
-  // Insert auction
-  const { data: auctionData, error: auctionError } = await supabaseClient.from('auction').insert([{
-    product_id: productId,
-    seller_id: sellerId,
-    starting_price: startingPrice,
-    current_price: startingPrice,
-    end_time: endTime,
-    status: 'active'
-  }]).select().single();
-
-  if (auctionError) {
-    console.error('Auction insert error:', auctionError);
-    statusMessage.textContent = '❌ Failed to create auction.';
-    return;
-  }
-
-  // Call the notification function after auction creation
-  try {
-    await sendNotification(sellerId, auctionData.id, 'Your auction has been successfully created!', 'Auction Created');
-  } catch (notificationError) {
-    console.error('Notification error:', notificationError);
-  }
-
-  statusMessage.textContent = '✅ Auction created! Redirecting...';
-  setTimeout(() => {
-    window.location.href = auction-details.html?id=${auctionData.id};
-  }, 1500);
 }
