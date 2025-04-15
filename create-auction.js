@@ -1,156 +1,266 @@
-import { supabaseClient } from './supabase.js';
-import { loadNotifications } from './notification.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-  fetchFeaturedAuctions();
-  setupSearch();
-  setupCategoryFilter();
-  checkAuthButtons();
-  loadNotifications();
-});
-
-// 🔥 Fetch Auctions & Remove Expired Ones
-async function fetchFeaturedAuctions(matchingProductIds = null) {
-  const auctionList = document.getElementById('auction-list');
-  auctionList.innerHTML = 'Loading auctions...';
-
-  let query = supabaseClient
-    .from('auction')
-    .select('id, current_price, end_time, product:product!auction_product_id_fkey(name, image_url, id, category_id)')
-    .order('end_time', { ascending: true });
-
-  if (matchingProductIds && matchingProductIds.length > 0) {
-    query = query.in('product_id', matchingProductIds);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('❌ Fetch error:', error);
-    auctionList.innerHTML = 'Failed to load auctions.';
-    return;
-  }
-
-  const now = new Date();
-  const validAuctions = data.filter(auction => new Date(auction.end_time) > now);
-
-  if (validAuctions.length === 0) {
-    auctionList.innerHTML = 'No matching auctions found.';
-    return;
-  }
-
-  auctionList.innerHTML = '';
-  validAuctions.forEach(auction => {
-    const div = document.createElement('div');
-    div.className = 'auction-card';
-
-    div.innerHTML = `
-      <img src="${auction.product?.image_url || 'placeholder.jpg'}" alt="${auction.product?.name || 'No Name'}" class="auction-thumb" />
-      <h3>${auction.product?.name || 'Unnamed Product'}</h3>
-      <p>Current Bid: ₹${auction.current_price}</p>
-      <button class="yellow-btn" onclick="location.href='auction-details.html?id=${auction.id}'">View Auction</button>
-    `;
-
-    auctionList.appendChild(div);
-  });
-}
-
-// 🔍 Search Functionality
-function setupSearch() {
-  const searchInput = document.querySelector('.search-container input');
-  searchInput.addEventListener('input', async () => {
-    const query = searchInput.value.trim().toLowerCase();
-
-    if (query === '') {
-      fetchFeaturedAuctions(); // Show all
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Auction - HammerHub</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #000;
+      color: #fff;
     }
 
-    const { data: products, error } = await supabaseClient
-      .from('product')
-      .select('id, name')
-      .ilike('name', %${query}%);
-
-    if (error) {
-      console.error('❌ Product search error:', error);
-      return;
+    header {
+      background-color: #111;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222;
     }
 
-    const matchingIds = products.map(p => p.id);
-    fetchFeaturedAuctions(matchingIds);
-  });
-}
+    .logo {
+      height: 40px;
+      cursor: pointer;
+    }
 
-// 📂 Category Filter (Fixed .single() issue)
-function setupCategoryFilter() {
-  const categoryLinks = document.querySelectorAll('#category-list a');
+    .auth-buttons {
+      display: flex;
+      gap: 1rem;
+    }
 
-  categoryLinks.forEach(link => {
-    link.addEventListener('click', async (e) => {
-      e.preventDefault();
+    .auth-btn {
+      background-color: #222;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
-      categoryLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
+    .auth-btn.primary {
+      background-color: #facc15;
+      color: #000;
+      font-weight: 600;
+    }
 
-      const selectedCategory = link.dataset.category;
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+      gap: 2rem;
+    }
 
-      const { data: categories, error: categoryError } = await supabaseClient
-        .from('category')
-        .select('id')
-        .eq('name', selectedCategory);
+    #create-auction-form {
+      background-color: #1a1a1a;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      animation: fadeIn 0.8s ease;
+    }
 
-      if (categoryError || !categories || categories.length === 0) {
-        console.error('❌ Category fetch error:', categoryError);
-        return;
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-      const category = categories[0];
+    #create-auction-form h2 {
+      text-align: center;
+      color: #facc15;
+      margin-bottom: 1.5rem;
+    }
 
-      const { data: products, error: productError } = await supabaseClient
-        .from('product')
-        .select('id')
-        .eq('category_id', category.id);
+    .form-group {
+      position: relative;
+      margin-bottom: 1rem;
+    }
 
-      if (productError) {
-        console.error('❌ Product fetch error:', productError);
-        return;
-      }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem 2.5rem 0.75rem 1rem;
+      background-color: #000;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
 
-      const productIds = products.map(p => p.id);
-      fetchFeaturedAuctions(productIds);
-    });
-  });
-}
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: #facc15;
+      outline: none;
+    }
 
-// 👤 Auth Buttons Handling
-async function checkAuthButtons() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  const authButtons = document.querySelector('.auth-buttons');
+    .form-group i {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
 
-  if (session && session.user) {
-    authButtons.innerHTML = `
-      <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    #image-preview img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #facc15;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #eab308;
+    }
+
+    #status-message {
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    .preview-card {
+      background-color: #1a1a1a;
+      padding: 1rem;
+      border-radius: 12px;
+      max-width: 300px;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .preview-card img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .spinner {
+      border: 4px solid #fff;
+      border-top: 4px solid #facc15;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
+    <div class="auth-buttons" id="auth-buttons">
+      <div class="notification-wrapper">
+        <span id="notification-bell" class="notification-bell">🔔</span>
+        <span id="notification-badge" class="notification-badge hidden">0</span>
+        <ul id="notification-list" class="notification-list hidden"></ul>
+      </div>
+  
+      <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn" id="profile-btn">👤 Profile</button>
-      <button class="auth-btn primary" id="logout-btn">Logout</button>
-    `;
+      <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
+      <button class="auth-btn primary" onclick="logout()">Logout</button>
+    </div>
+  </header>
 
-    document.getElementById('logout-btn').addEventListener('click', logout);
-    document.getElementById('profile-btn').addEventListener('click', () => {
-      window.location.href = 'profile.html';
-    });
-    document.getElementById('create-auction-btn').addEventListener('click', () => {
-      window.location.href = 'create-auction.html';
-    });
-  }
-}
+  <main>
+    <form id="create-auction-form">
+      <h2>Create Auction</h2>
 
-// 🚪 Logout
-async function logout() {
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) {
-    console.error('Logout failed:', error.message);
-  } else {
-    window.location.reload();
-  }
-}
+      <div class="form-group">
+        <input type="text" id="product-name" placeholder="Product Name" required />
+        <i></i>
+      </div>
+
+      <div class="form-group">
+        <textarea id="product-description" placeholder="Product Description" required></textarea>
+        <i></i>
+      </div>
+
+      <div class="form-group">
+        <select id="category-select" required>
+          <option value="">Select Category</option>
+        </select>
+        <i></i>
+      </div>
+
+      <div class="form-group">
+        <input type="file" id="product-image" accept="image/*" required />
+        <i></i>
+      </div>
+      <div id="image-preview"></div>
+
+      <div class="form-group">
+        <input type="number" id="starting-price" placeholder="Starting Price (₹)" min="1" required />
+        <i></i>
+      </div>
+
+      <div class="form-group">
+        <input type="datetime-local" id="end-time" required />
+        <i></i>
+      </div>
+
+      <button type="submit" id="submit-button">Create Auction</button>
+      <div id="status-message"></div>
+    </form>
+
+    <!-- Live Preview -->
+    <div class="preview-card" id="live-preview" style="display:none;">
+      <img id="preview-image" src="" alt="Preview Image" />
+      <h3 id="preview-title"></h3>
+      <p id="preview-price"></p>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 HammerHub. All rights reserved.</p>
+    <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
+  </footer>
+
+  <script type="module" src="create-auction.js"></script>
+  <script>
+    document.getElementById('logo-home').addEventListener('click', () => {
+      window.location.href = 'homepage.html';
+    });
+
+    // Define logout function to use inline in button
+    async function logout() {
+      const { supabaseClient } = await import('./supabase.js');
+      await supabaseClient.auth.signOut();
+      window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>
