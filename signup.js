@@ -97,7 +97,7 @@ async function updateAllAuctionStatuses() {
   }
 }
 updateAllAuctionStatuses();
-
+setInterval(updateAllAuctionStatuses, 10000);
 
 // Google signup
 document.getElementById('google-signup').addEventListener('click', async () => {
