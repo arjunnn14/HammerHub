@@ -160,6 +160,7 @@ async function callUpdateAuctionWinners() {
     else console.log('Auction status updated')
 }
 setInterval(callUpdateAuctionWinners, 60 * 1000)
+callUpdateAuctionWinners()
 
 // 🛎️ Notifications (You can keep or update this function as needed)
 import { loadNotifications } from './notification.js';
