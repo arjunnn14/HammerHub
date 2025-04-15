@@ -16,7 +16,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     window.location.href = 'homepage.html';
   }
 
-
 // Google login
 document.getElementById('google-login').addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
