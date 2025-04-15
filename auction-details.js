@@ -118,6 +118,9 @@ async function checkIfInWatchlist(userId, auctionId) {
 }
 
 function startCountdown() {
+  // Get the end time from the form
+  const endTime = new Date(endTimeInputEl.value);
+
   function updateCountdown() {
     const now = new Date();
     const diff = endTime - now;
@@ -126,6 +129,9 @@ function startCountdown() {
       endTimeEl.textContent = 'Auction Ended';
       clearInterval(timerInterval);
       bidForm.style.display = 'none';
+      
+      // Call function to update winner_id and auction status when auction ends
+      updateAuctionWinner();
       return;
     }
 
@@ -137,8 +143,50 @@ function startCountdown() {
     endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
   }
 
-  updateCountdown();
-  var timerInterval = setInterval(updateCountdown, 1000);
+  // Update countdown every second
+  let timerInterval = setInterval(updateCountdown, 1000);
+  updateCountdown();  // Initial call to display countdown right away
+}
+
+// Function to update the auction winner after auction ends
+async function updateAuctionWinner() {
+  try {
+    // Fetch the most recent bid for the auction
+    const { data: bids, error: bidError } = await supabase
+      .from('bid')
+      .select('bidder_id')
+      .eq('auction_id', auctionIdEl.value) // Use auction ID from the form
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (bidError) {
+      console.error('Error fetching bid:', bidError);
+      return;
+    }
+
+    if (bids.length > 0) {
+      const winningBidderId = bids[0].bidder_id;
+
+      // Update the auction with the winner_id and status
+      const { error: updateError } = await supabase
+        .from('auction')
+        .update({
+          winner_id: winningBidderId,
+          status: 'completed',
+        })
+        .eq('id', auctionIdEl.value); // Use auction ID from the form
+
+      if (updateError) {
+        console.error('Error updating auction:', updateError);
+      } else {
+        console.log('Auction winner updated successfully!');
+      }
+    } else {
+      console.log('No bids found for this auction.');
+    }
+  } catch (error) {
+    console.error('Error updating auction winner:', error);
+  }
 }
 
 function startPricePolling() {
