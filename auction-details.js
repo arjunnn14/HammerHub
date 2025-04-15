@@ -1,5 +1,3 @@
-// auction-page.js
-
 import { supabaseClient } from './supabase.js';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -18,12 +16,14 @@ const statusMessage = document.getElementById('status-message');
 const endTimeInputEl = document.getElementById('auction-end-time');
 const watchlistBtn = document.getElementById('watchlist-btn');
 const auctionIdEl = document.getElementById('auction-id');
+const shareButton = document.getElementById('share-auction-btn');
 
 let endTime;
 let currentPrice = 0;
 let sellerId;
-
 let currentUserId;
+let previousWinnerId = null;
+let previousBids = {};
 
 async function initPage() {
   if (!auctionId) {
@@ -31,10 +31,7 @@ async function initPage() {
     return;
   }
 
-  const {
-    data: userData,
-    error: userError
-  } = await supabaseClient.auth.getUser();
+  const { data: userData, error: userError } = await supabaseClient.auth.getUser();
   currentUserId = userData?.user?.id;
 
   if (currentUserId && auctionId) {
@@ -44,9 +41,9 @@ async function initPage() {
   await loadAuctionDetails();
   startCountdown();
   startPricePolling();
+  startWinnerPolling();
+  startNotificationPolling();
 }
-
-document.addEventListener('DOMContentLoaded', initPage);
 
 async function loadAuctionDetails() {
   const { data, error } = await supabaseClient
@@ -84,6 +81,58 @@ async function loadAuctionDetails() {
   currentPriceEl.textContent = currentPrice;
   endTimeInputEl.value = data.end_time;
   sellerId = data.seller_id;
+
+  endTime = new Date(data.end_time); // store globally for countdown
+}
+
+function startCountdown() {
+  function updateCountdown() {
+    const now = new Date();
+    const diff = endTime - now;
+
+    if (diff <= 0) {
+      endTimeEl.textContent = 'Auction Ended';
+      clearInterval(timerInterval);
+      bidForm.style.display = 'none';
+      updateAuctionWinner();
+      return;
+    }
+
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+
+    endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
+  }
+
+  const timerInterval = setInterval(updateCountdown, 1000);
+  updateCountdown();
+}
+
+if (shareButton) {
+  shareButton.addEventListener('click', async () => {
+    const shareUrl = `${window.location.origin}/auction-details.html?id=${auctionId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this auction on HammerHub!',
+          text: 'Place your bid before it ends! 🔨',
+          url: shareUrl,
+        });
+      } catch (error) {
+        console.error('Web Share API failed:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('🔗 Auction link copied to clipboard!');
+      } catch (error) {
+        console.error('Clipboard copy failed:', error);
+        alert('❌ Failed to copy link. Please try manually.');
+      }
+    }
+  });
 }
 
 watchlistBtn.addEventListener('click', async () => {
@@ -123,65 +172,6 @@ async function checkIfInWatchlist(userId, auctionId) {
   watchlistBtn.textContent = inList ? '✅ In Watchlist' : '⭐ Add to Watchlist';
 }
 
-function startCountdown() {
-  // Ensure the end time is parsed correctly as a Date object
-  const endTime = new Date(endTimeInputEl.value);
-
-  function updateCountdown() {
-    const now = new Date();
-    const diff = endTime - now; // Get the time difference between now and the end time
-
-    if (diff <= 0) {
-      endTimeEl.textContent = 'Auction Ended';
-      clearInterval(timerInterval);
-      bidForm.style.display = 'none';
-      updateAuctionWinner();
-      return;
-    }
-
-    // Calculate days, hours, minutes, and seconds from the time difference
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const m = Math.floor((diff / (1000 * 60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-
-    // Update the displayed countdown
-    endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
-  }
-
-  // Set an interval to update the countdown every second
-  const timerInterval = setInterval(updateCountdown, 1000);
-  updateCountdown(); // Initial call to display the countdown immediately
-}
-
-const shareButton = document.getElementById('share-auction-btn');
-  if (shareButton) {
-    shareButton.addEventListener('click', async () => {
-      const shareUrl = ${window.location.origin}/auction-details.html?id=${auctionId};
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Check out this auction on HammerHub!',
-            text: 'Place your bid before it ends! 🔨',
-            url: shareUrl,
-          });
-        } catch (error) {
-          console.error('Web Share API failed:', error);
-        }
-      } else {
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          alert('🔗 Auction link copied to clipboard!');
-        } catch (error) {
-          console.error('Clipboard copy failed:', error);
-          alert('❌ Failed to copy link. Please try manually.');
-        }
-      }
-    });
-  }
-
-let previousWinnerId = null;
-
 function startWinnerPolling() {
   setInterval(async () => {
     const { data: latestBid, error: bidError } = await supabaseClient
@@ -190,115 +180,69 @@ function startWinnerPolling() {
       .eq('auction_id', auctionId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();  // Only get the most recent bid
+      .single();
 
-    if (bidError) {
-      console.error('❌ Error fetching latest bid:', bidError);
-      return;
-    }
-
-    if (!latestBid) {
-      console.log('⚠️ No bids placed yet.');
-      return;
-    }
+    if (bidError || !latestBid) return;
 
     const winningBidderId = latestBid.bidder_id;
-
-    // Only update if the winner has changed
     if (winningBidderId !== previousWinnerId) {
-      // Update the winner_id in the auction table
       const { error: updateError } = await supabaseClient
         .from('auction')
         .update({ winner_id: winningBidderId })
         .eq('id', auctionId);
 
-      if (updateError) {
-        console.error('❌ Error updating winner_id:', updateError);
-      } else {
-        console.log(`✅ Winner updated to bidder ID ${winningBidderId}`);
-        previousWinnerId = winningBidderId;  // Update the stored previous winner
-      }
+      if (!updateError) previousWinnerId = winningBidderId;
     }
-  }, 3000);  // Check every 3 seconds
+  }, 3000);
 }
-
-document.addEventListener('DOMContentLoaded', startWinnerPolling);
-
-let previousBids = {}; // To store the latest bid details for each auction
 
 function startNotificationPolling() {
   setInterval(async () => {
-    // Get all active auctions and their latest bids
     const { data: auctions, error: auctionsError } = await supabaseClient
       .from('auction')
       .select('id, current_price')
-      .neq('status', 'completed');  // Exclude completed auctions
+      .neq('status', 'completed');
 
-    if (auctionsError) {
-      console.error('❌ Error fetching auctions:', auctionsError);
-      return;
-    }
+    if (auctionsError) return;
 
-    // Get the user's bids
     const { data: bids, error: bidsError } = await supabaseClient
       .from('bid')
       .select('id, auction_id, bidder_id, bid_amount')
       .eq('bidder_id', currentUserId)
-      .order('created_at', { ascending: false });  // Get user's latest bids
+      .order('created_at', { ascending: false });
 
-    if (bidsError) {
-      console.error('❌ Error fetching user bids:', bidsError);
-      return;
-    }
+    if (bidsError) return;
 
-    // Track outbid notifications for each auction
     bids.forEach(bid => {
-      const auctionId = bid.auction_id;
-
-      // Check if the user's latest bid is not the highest
-      const auction = auctions.find(a => a.id === auctionId);
+      const auction = auctions.find(a => a.id === bid.auction_id);
       if (auction && bid.bid_amount < auction.current_price) {
-        // If user is outbid and this is the first time, send a notification
-        if (!previousBids[auctionId] || previousBids[auctionId] !== auction.current_price) {
-          sendOutbidNotification(auctionId);
-          previousBids[auctionId] = auction.current_price;  // Update stored bid for this auction
+        if (!previousBids[bid.auction_id] || previousBids[bid.auction_id] !== auction.current_price) {
+          sendOutbidNotification(bid.auction_id);
+          previousBids[bid.auction_id] = auction.current_price;
         }
       }
     });
-  }, 3000);  // Poll every 3 seconds
+  }, 3000);
 }
 
-// Function to send "You have been outbid" notification
 async function sendOutbidNotification(auctionId) {
-  const { data: auctionData, error: auctionError } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('auction')
     .select('product(name), seller_id')
     .eq('id', auctionId)
     .single();
 
-  if (auctionError || !auctionData) {
-    console.error('❌ Error fetching auction details:', auctionError);
-    return;
+  if (!error && data) {
+    await supabaseClient.from('notifications').insert([
+      {
+        user_id: currentUserId,
+        auction_id: auctionId,
+        message: `🔔 You have been outbid on "${data.product.name}".`,
+        read: false
+      }
+    ]);
   }
-
-  const { product, seller_id } = auctionData;
-  const productName = product.name;
-
-  // Send outbid notification to the current user
-  await supabaseClient.from('notifications').insert([
-    {
-      user_id: currentUserId,
-      auction_id: auctionId,
-      message: `🔔 You have been outbid on "${productName}".`,
-      read: false
-    }
-  ]);
-
-  console.log(`✅ Outbid notification sent to user ${currentUserId} for auction ${auctionId}`);
 }
-
-document.addEventListener('DOMContentLoaded', startNotificationPolling);
-
 
 function startPricePolling() {
   setInterval(async () => {
@@ -327,7 +271,6 @@ bidForm.addEventListener('submit', async (e) => {
 
   const { data: userData, error: authError } = await supabaseClient.auth.getUser();
   const userId = userData?.user?.id;
-
   if (authError || !userId) {
     statusMessage.textContent = '❌ You must be logged in to place a bid.';
     return;
@@ -344,14 +287,8 @@ bidForm.addEventListener('submit', async (e) => {
     .eq('user_id', userId)
     .single();
 
-  if (walletError || !walletData) {
-    statusMessage.textContent = '❌ Could not fetch wallet balance.';
-    return;
-  }
-
-  const walletBalance = parseFloat(walletData.balance);
-  if (walletBalance < bidAmount) {
-    statusMessage.textContent = '❌ Insufficient wallet balance to place this bid.';
+  if (walletError || !walletData || walletData.balance < bidAmount) {
+    statusMessage.textContent = '❌ Insufficient wallet balance.';
     return;
   }
 
@@ -362,26 +299,14 @@ bidForm.addEventListener('submit', async (e) => {
     .order('bid_amount', { ascending: false })
     .limit(2);
 
-  const { error: insertError } = await supabaseClient.from('bid').insert([
+  await supabaseClient.from('bid').insert([
     { auction_id: auctionId, bidder_id: userId, bid_amount: bidAmount }
   ]);
 
-  if (insertError) {
-    console.error('Bid error:', insertError);
-    statusMessage.textContent = '❌ Failed to place bid.';
-    return;
-  }
-
-  const { error: updateError } = await supabaseClient
+  await supabaseClient
     .from('auction')
     .update({ current_price: bidAmount })
     .eq('id', auctionId);
-
-  if (updateError) {
-    console.error('Price update error:', updateError);
-    statusMessage.textContent = '⚠️ Bid was recorded but price update failed.';
-    return;
-  }
 
   const { data: auctionInfo } = await supabaseClient
     .from('auction')
@@ -418,3 +343,5 @@ bidForm.addEventListener('submit', async (e) => {
   statusMessage.textContent = '✅ Bid placed successfully!';
   bidAmountInput.value = '';
 });
+
+document.addEventListener('DOMContentLoaded', initPage);
