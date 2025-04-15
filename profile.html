@@ -249,8 +249,7 @@
         <span id="notification-badge" class="notification-badge hidden">0</span>
       </button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
-      <button onclick="logout()">Logout</button>
+      <button class="auth-btn"onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
     </div>
   </header>
 
@@ -369,11 +368,5 @@
     </div>
   </footer>
   <script type="module" src="profile.js"></script>
-  <script>
-    function logout() {
-      localStorage.clear();
-      window.location.href = 'login.html';
-    }
-  </script>
 </body>
 </html>
