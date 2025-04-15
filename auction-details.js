@@ -124,11 +124,12 @@ async function checkIfInWatchlist(userId, auctionId) {
 }
 
 function startCountdown() {
+  // Ensure the end time is parsed correctly as a Date object
   const endTime = new Date(endTimeInputEl.value);
 
   function updateCountdown() {
     const now = new Date();
-    const diff = endTime - now;
+    const diff = endTime - now; // Get the time difference between now and the end time
 
     if (diff <= 0) {
       endTimeEl.textContent = 'Auction Ended';
@@ -138,17 +139,46 @@ function startCountdown() {
       return;
     }
 
+    // Calculate days, hours, minutes, and seconds from the time difference
     const d = Math.floor(diff / (1000 * 60 * 60 * 24));
     const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const m = Math.floor((diff / (1000 * 60)) % 60);
     const s = Math.floor((diff / 1000) % 60);
 
+    // Update the displayed countdown
     endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
   }
 
+  // Set an interval to update the countdown every second
   const timerInterval = setInterval(updateCountdown, 1000);
-  updateCountdown();
+  updateCountdown(); // Initial call to display the countdown immediately
 }
+
+const shareButton = document.getElementById('share-auction-btn');
+  if (shareButton) {
+    shareButton.addEventListener('click', async () => {
+      const shareUrl = ${window.location.origin}/auction-details.html?id=${auctionId};
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Check out this auction on HammerHub!',
+            text: 'Place your bid before it ends! 🔨',
+            url: shareUrl,
+          });
+        } catch (error) {
+          console.error('Web Share API failed:', error);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          alert('🔗 Auction link copied to clipboard!');
+        } catch (error) {
+          console.error('Clipboard copy failed:', error);
+          alert('❌ Failed to copy link. Please try manually.');
+        }
+      }
+    });
+  }
 
 let previousWinnerId = null;
 
