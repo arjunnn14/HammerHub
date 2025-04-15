@@ -194,6 +194,82 @@ function startWinnerPolling() {
 
 document.addEventListener('DOMContentLoaded', startWinnerPolling);
 
+let previousBids = {}; // To store the latest bid details for each auction
+
+function startNotificationPolling() {
+  setInterval(async () => {
+    // Get all active auctions and their latest bids
+    const { data: auctions, error: auctionsError } = await supabaseClient
+      .from('auction')
+      .select('id, current_price')
+      .neq('status', 'completed');  // Exclude completed auctions
+
+    if (auctionsError) {
+      console.error('❌ Error fetching auctions:', auctionsError);
+      return;
+    }
+
+    // Get the user's bids
+    const { data: bids, error: bidsError } = await supabaseClient
+      .from('bid')
+      .select('id, auction_id, bidder_id, bid_amount')
+      .eq('bidder_id', currentUserId)
+      .order('created_at', { ascending: false });  // Get user's latest bids
+
+    if (bidsError) {
+      console.error('❌ Error fetching user bids:', bidsError);
+      return;
+    }
+
+    // Track outbid notifications for each auction
+    bids.forEach(bid => {
+      const auctionId = bid.auction_id;
+
+      // Check if the user's latest bid is not the highest
+      const auction = auctions.find(a => a.id === auctionId);
+      if (auction && bid.bid_amount < auction.current_price) {
+        // If user is outbid and this is the first time, send a notification
+        if (!previousBids[auctionId] || previousBids[auctionId] !== auction.current_price) {
+          sendOutbidNotification(auctionId);
+          previousBids[auctionId] = auction.current_price;  // Update stored bid for this auction
+        }
+      }
+    });
+  }, 3000);  // Poll every 3 seconds
+}
+
+// Function to send "You have been outbid" notification
+async function sendOutbidNotification(auctionId) {
+  const { data: auctionData, error: auctionError } = await supabaseClient
+    .from('auction')
+    .select('product(name), seller_id')
+    .eq('id', auctionId)
+    .single();
+
+  if (auctionError || !auctionData) {
+    console.error('❌ Error fetching auction details:', auctionError);
+    return;
+  }
+
+  const { product, seller_id } = auctionData;
+  const productName = product.name;
+
+  // Send outbid notification to the current user
+  await supabaseClient.from('notifications').insert([
+    {
+      user_id: currentUserId,
+      auction_id: auctionId,
+      message: `🔔 You have been outbid on "${productName}".`,
+      read: false
+    }
+  ]);
+
+  console.log(`✅ Outbid notification sent to user ${currentUserId} for auction ${auctionId}`);
+}
+
+document.addEventListener('DOMContentLoaded', startNotificationPolling);
+
+
 function startPricePolling() {
   setInterval(async () => {
     const { data, error } = await supabaseClient
