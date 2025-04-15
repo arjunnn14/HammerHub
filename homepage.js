@@ -228,6 +228,14 @@ setInterval(() => {
   updateAllAuctionStatuses();
 }, 10000); // every 10 seconds
 
+const { data, error } = await supabase.rpc('sync-ended-auctions');
+
+if (error) {
+  console.error('Error calling edge function:', error);
+} else {
+  console.log('Edge function response:', data);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
 });
