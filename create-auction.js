@@ -73,7 +73,6 @@ function setupImagePreview() {
   });
 }
 
-
 async function handleCreateAuction(event) {
   event.preventDefault();
   const statusMessage = document.getElementById('status-message');
@@ -92,12 +91,12 @@ async function handleCreateAuction(event) {
 
   if (!imageFile || isNaN(startingPrice) || !name || !description || !categoryId || !endTime) {
     statusMessage.textContent = '❌ Please fill in all fields.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   if (startingPrice <= 0) {
     statusMessage.textContent = '❌ Starting price must be greater than 0.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   const { data: userData, error: authError } = await supabaseClient.auth.getUser();
@@ -105,7 +104,7 @@ async function handleCreateAuction(event) {
 
   if (authError || !sellerId) {
     statusMessage.textContent = '❌ You must be logged in to create an auction.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   // Upload image
@@ -117,7 +116,7 @@ async function handleCreateAuction(event) {
   if (uploadError) {
     console.error('Image upload error:', uploadError);
     statusMessage.textContent = '❌ Failed to upload image.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   const imageUrl = `https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName}`;
@@ -133,7 +132,7 @@ async function handleCreateAuction(event) {
   if (productError) {
     console.error('Product insert error:', productError);
     statusMessage.textContent = '❌ Failed to create product.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   const productId = productData.id;
@@ -151,60 +150,7 @@ async function handleCreateAuction(event) {
   if (auctionError) {
     console.error('Auction insert error:', auctionError);
     statusMessage.textContent = '❌ Failed to create auction.';
-    return;
-  }
-
-  statusMessage.textContent = '✅ Auction created! Redirecting...';
-  setTimeout(() => {
-    window.location.href = `auction-details.html?id=${auctionData.id}`;
-  }, 1500);
-}
-
-
-  // Upload image
-  const fileName = `${Date.now()}-${imageFile.name}`;
-  const { error: uploadError } = await supabaseClient.storage
-    .from('product-images')
-    .upload(fileName, imageFile);
-
-  if (uploadError) {
-    console.error('Image upload error:', uploadError);
-    statusMessage.textContent = '❌ Failed to upload image.';
-    return;
-  }
-
-  const imageUrl = `https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName}`;
-
-  // Insert product
-  const { data: productData, error: productError } = await supabaseClient.from('product').insert([{
-    name,
-    description,
-    image_url: imageUrl,
-    category_id: categoryId
-  }]).select().single();
-
-  if (productError) {
-    console.error('Product insert error:', productError);
-    statusMessage.textContent = '❌ Failed to create product.';
-    return;
-  }
-
-  const productId = productData.id;
-
-  // Insert auction
-  const { data: auctionData, error: auctionError } = await supabaseClient.from('auction').insert([{
-    product_id: productId,
-    seller_id: sellerId,
-    starting_price: startingPrice,
-    current_price: startingPrice,
-    end_time: endTime,
-    status: 'active'
-  }]).select().single();
-
-  if (auctionError) {
-    console.error('Auction insert error:', auctionError);
-    statusMessage.textContent = '❌ Failed to create auction.';
-    return;
+    return;  // This return is correct as it's inside the function
   }
 
   statusMessage.textContent = '✅ Auction created! Redirecting...';
