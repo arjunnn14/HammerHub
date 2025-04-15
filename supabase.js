@@ -4,12 +4,19 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = "https://jzcmbrqogyghyhvwzgps.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6Y21icnFvZ3lnaHlodnd6Z3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjA0MzUsImV4cCI6MjA1OTc5NjQzNX0.2Cc_QdoHU_Q72XFKmhRD0bvOnx4t2UswWy5lK_w8aj4";
 export const supabaseClient = createClient(supabaseUrl, supabaseKey);
-async function updateAuctionStatus() {
+
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_API_KEY');
+
+// Function to update status for all auctions
+async function updateAllAuctionStatuses() {
   try {
     // Step 1: Get the current time
     const now = new Date().toISOString();  // ISO format string
 
-    // Step 2: Fetch auctions where the end_time is before the current time and the status is not 'completed'
+    // Step 2: Fetch all auctions where the end_time is before the current time and the status is not 'completed'
     const { data: auctions, error } = await supabase
       .from('auction')
       .select('id, end_time, status')
@@ -76,4 +83,4 @@ async function updateAuctionStatus() {
 }
 
 // Call the function directly (for testing)
-updateAuctionStatus();
+updateAllAuctionStatuses();
