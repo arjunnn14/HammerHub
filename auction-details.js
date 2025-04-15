@@ -363,8 +363,5 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadAuctionDetails();    // Then load auction data
     startCountdown();
     startPricePolling();
-  const { data, error } = await supabase
-  .from('bid')
-  .insert([{ auction_id, bidder_id, bid_amount }]);
   });
 });
