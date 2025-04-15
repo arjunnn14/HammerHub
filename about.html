@@ -227,12 +227,11 @@
             <button class="search-button" id="search-button">🔍</button>
           </div>
         </div>
-        <div class="header-buttons">
-          <button class="header-btn" id="notifications-btn">🔔</button>
-          <button class="header-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
-          <button class="header-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-          <button class="header-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
-          <button class="header-btn primary" onclick="logout()">Logout</button>
+        
+          <button class="auth-btn" id="notifications-btn">🔔</button>
+          <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
+          <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+          <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
       </header>
       
 
@@ -340,10 +339,6 @@
       window.location.href = 'notifications.html';
     });
 
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await supabaseClient.auth.signOut();
-      window.location.href = 'login.html';
-    });
   </script>
 
 </body>
