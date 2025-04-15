@@ -1,96 +1,78 @@
 import { supabaseClient } from './supabase.js';
+import './notification.js'; // Make sure this is only imported ONCE per page
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const user = (await supabaseClient.auth.getUser()).data.user;
-  if (!user) return alert('Please log in.');
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await loadUserProfile();
+    await loadUserAuctions();
+    await loadUserBids();  // ✅ Updated with full product details
+    await loadUserWonAuctions();
+    setupEditProfile();
+  } catch (error) {
+    console.error("Error initializing profile page:", error);
+    alert("Failed to load profile data. Please refresh the page.");
+  }
+});
 
-  const userId = user.id;
-  const userNameElem = document.getElementById('userName');
-  const userEmailElem = document.getElementById('userEmail');
-  const userIdElem = document.getElementById('userId');
-  const editProfileBtn = document.getElementById('editProfileBtn');
-  const profileInfoView = document.getElementById('profileInfoView');
-  const profileInfoEdit = document.getElementById('profileInfoEdit');
-  const saveProfileBtn = document.getElementById('saveProfileBtn');
-  const editUserName = document.getElementById('editUserName');
-  const editUserEmail = document.getElementById('editUserEmail');
-  const auctionsList = document.getElementById('auctionsList');
-  const bidsList = document.getElementById('bidsList');
-  const wonAuctionsList = document.getElementById('wonAuctionsList');
+// Load and display user profile information
+const loadUserProfile = async () => {
+  try {
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
 
-  // Load user profile information
-  async function loadUserProfile() {
-    const { data, error } = await supabaseClient
-      .from('user')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error || !data) {
-      console.error('❌ Error loading user profile:', error);
+    if (error) throw error;
+    if (!user) {
+      window.location.href = "/login.html";
       return;
     }
 
-    userNameElem.textContent = data.full_name || 'N/A';
-    userEmailElem.textContent = data.email || 'N/A';
-    userIdElem.textContent = data.id;
+    // View mode
+    document.getElementById("userEmail").textContent = user.email;
+    document.getElementById("userId").textContent = user.id;
+    document.getElementById("userName").textContent = user.user_metadata?.full_name || "Not provided";
 
-    editUserName.value = data.full_name || '';
-    editUserEmail.value = data.email || '';
+    // Edit mode
+    document.getElementById("editUserEmail").value = user.email;
+    document.getElementById("editUserId").textContent = user.id;
+    document.getElementById("editUserName").value = user.user_metadata?.full_name || "";
+
+  } catch (error) {
+    console.error("Error loading user profile:", error);
+    alert("Failed to load user profile. Please try again.");
   }
+};
 
-  // Toggle edit mode
-  editProfileBtn.addEventListener('click', () => {
-    profileInfoView.classList.add('hidden');
-    profileInfoEdit.classList.remove('hidden');
+// Enable profile edit mode
+const setupEditProfile = () => {
+  const editBtn = document.getElementById("editProfileBtn");
+  const saveBtn = document.getElementById("saveProfileBtn");
+  const viewSection = document.getElementById("profileInfoView");
+  const editSection = document.getElementById("profileInfoEdit");
+
+  editBtn.addEventListener("click", () => {
+    viewSection.classList.add("hidden");
+    editSection.classList.remove("hidden");
   });
 
-  // Save profile changes
-  saveProfileBtn.addEventListener('click', async () => {
-    const updatedName = editUserName.value;
-    const updatedEmail = editUserEmail.value;
+  saveBtn.addEventListener("click", async () => {
+    try {
+      const newName = document.getElementById("editUserName").value;
 
-    const { error } = await supabaseClient
-      .from('user')
-      .update({ full_name: updatedName, email: updatedEmail })
-      .eq('id', userId);
+      const { error } = await supabaseClient.auth.updateUser({
+        data: { full_name: newName }
+      });
 
-    if (error) {
-      console.error('❌ Failed to update profile:', error);
-      alert('Failed to update profile!');
-      return;
+      if (error) throw error;
+
+      document.getElementById("userName").textContent = newName || "Not provided";
+      viewSection.classList.remove("hidden");
+      editSection.classList.add("hidden");
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
     }
-
-    alert('Profile updated successfully!');
-    loadUserProfile();
-    profileInfoView.classList.remove('hidden');
-    profileInfoEdit.classList.add('hidden');
   });
-
-  // Load user's auctions
-  async function loadUserAuctions() {
-    const { data, error } = await supabaseClient
-      .from('auction')
-      .select('id, current_price, product:product!auction_product_id_fkey(name)')
-      .eq('seller_id', userId);
-
-    if (error) {
-      console.error('❌ Error loading auctions:', error);
-      return;
-    }
-
-    auctionsList.innerHTML = '';
-    if (!data || data.length === 0) {
-      auctionsList.innerHTML = '<li>No auctions found</li>';
-      return;
-    }
-
-    data.forEach(auction => {
-      const li = document.createElement('li');
-      li.textContent = `${auction.product?.name || 'Unnamed Product'} - ₹${auction.current_price}`;
-      auctionsList.appendChild(li);
-    });
-  }
+};
 
 // Load user's created auctions
 const loadUserAuctions = async () => {
@@ -253,26 +235,4 @@ const loadUserWonAuctions = async () => {
   }
 };
 
-  async function loadWalletBalance() {
-    const { data, error } = await supabaseClient
-      .from('wallet')
-      .select('balance')
-      .eq('user_id', userId)
-      .single();
-  
-    if (error) {
-      console.error('❌ Error loading wallet:', error);
-      document.getElementById('walletBalance').textContent = 'Error';
-      return;
-    }
-  
-    document.getElementById('walletBalance').textContent = `₹${data.balance.toFixed(2)}`;
-  }
 
-  // Initial data load
-  await loadUserProfile();
-  await loadUserAuctions();
-  await loadUserBids();
-  await loadUserWonAuctions();
-  await loadWalletBalance();
-});
