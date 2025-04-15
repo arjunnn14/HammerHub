@@ -171,7 +171,7 @@ export async function updateAllAuctionStatuses() {
     console.log('🚀 Running updateAllAuctionStatuses...');
     const now = new Date().toISOString();
 
-    const { data: auctions, error } = await supabaseClient
+    const { data: auction, error } = await supabaseClient
       .from('auction')
       .select('id, end_time, status')
       .lt('end_time', now)
@@ -182,9 +182,9 @@ export async function updateAllAuctionStatuses() {
       return;
     }
 
-    console.log('⏳ Auctions to update:', auctions);
+    console.log('⏳ Auctions to update:', auction);
 
-    for (const auction of auctions) {
+    for (const auctions of auction) {
       const { data: topBid, error: bidError } = await supabaseClient
         .from('bid')
         .select('bidder_id')
