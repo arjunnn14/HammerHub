@@ -35,6 +35,11 @@ function setupImagePreview() {
   const fileInput = document.getElementById('product-image');
   const previewDiv = document.getElementById('image-preview');
 
+  if (!fileInput || !previewDiv) {
+    console.warn('⚠️ product-image or image-preview element not found');
+    return;
+  }
+
   fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
     previewDiv.innerHTML = '';
@@ -67,6 +72,7 @@ function setupImagePreview() {
     reader.readAsDataURL(file);
   });
 }
+
 
 async function handleCreateAuction(event) {
   event.preventDefault();
