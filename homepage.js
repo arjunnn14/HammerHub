@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCategoryFilter();
   checkAuthButtons();
   loadNotifications();
+  callUpdateAuctionWinners()
 });
 
 // 🔥 Fetch Auctions & Remove Expired Ones
