@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category - HammerHub</title>
+  <link rel="stylesheet" href="stylesheet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #000;
+      color: #fff;
+    }
+
+    header {
+      background-color: #111;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222;
+    }
+
+    header h1 a {
+      text-decoration: none;
+      color: #facc15;
+      font-size: 1.5rem;
+    }
+
+    main {
+      padding: 2rem 1rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .category-title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      color: #facc15;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .filters label,
+    .filters select,
+    .filters input,
+    .filters button {
+      background-color: #000;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+
+    .filters button {
+      background-color: #facc15;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .filters button:hover {
+      background-color: #eab308;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .product-card {
+      background-color: #1a1a1a;
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      transition: transform 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .product-card img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .product-card h3 {
+      margin: 0.5rem 0;
+      color: #facc15;
+    }
+
+    .product-card p {
+      margin: 0.5rem 0;
+    }
+
+    .product-card button {
+      background-color: #facc15;
+      color: #000;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .product-card button:hover {
+      background-color: #eab308;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #aaa;
+      border-top: 1px solid #222;
+      margin-top: 4rem;
+    }
+
+    footer a {
+      color: #facc15;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1><a href="homepage.html">🔨 HammerHub</a></h1>
+  </header>
+
+  <main>
+    <h2 id="category-title">Category</h2>
+
+    <section class="filters">
+      <label for="sort">Sort by:</label>
+      <select id="sort">
+        <option value="">Default</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+      </select>
+
+      <label for="max-price">Max Price:</label>
+      <input type="number" id="max-price" placeholder="e.g. 5000" />
+
+      <button id="apply-filters">Apply Filters</button>
+    </section>
+
+    <div id="product-list" class="product-grid">Loading products...</div>
+  </main>
+
+  <footer>
+    <p>© 2025 HammerHub. All rights reserved.</p>
+    <p>Contact us: <a href="mailto:HammerHub@gmail.com">HammerHub@gmail.com</a> | 123 456 7890</p>
+  </footer>
+
+  <script type="module" src="category.js"></script>
+</body>
+</html>
