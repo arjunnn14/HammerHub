@@ -239,6 +239,9 @@ async function updateAuctionStatus() {
 
 // Run the function to check auctions and update status
 updateAuctionStatus();
+setInterval(() => {
+  updateAllAuctionStatuses();
+}, 60000); // every 60 seconds
 
 document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
