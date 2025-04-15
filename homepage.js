@@ -228,6 +228,31 @@ setInterval(() => {
   updateAllAuctionStatuses();
 }, 10000); // every 10 seconds
 
+async function callEdgeFunction() {
+  const response = await fetch('https://jzcmbrqogyghyhvwzgps.supabase.co/functions/v1/sync-ended-auctions', {
+    method: 'POST',  // or 'GET' depending on the function
+    headers: {
+      'Content-Type': 'application/json',
+      // Add any authentication headers if needed
+      'Authorization': `Bearer ${your_jwt_token}` // If using JWT for authorization
+    },
+    body: JSON.stringify({
+      // Send any data the function expects (optional)
+      key: 'value',
+    })
+  });
+
+  const data = await response.json();
+
+  if (response.ok) {
+    console.log('Edge function response:', data);
+  } else {
+    console.error('Error calling edge function:', data);
+  }
+}
+// Call the function
+callEdgeFunction();
+
 document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
 });
