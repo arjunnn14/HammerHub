@@ -350,6 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNotifications();
   setInterval(() => loadNotifications(), 15000);
 
+  setInterval(async () => {
+  await supabaseClient.rpc('mark_auction_winners');
+}, 60 * 1000); // every 1 minute
+  
   async function markCompletedAuctions() {
     const { data, error } = await supabaseClient.rpc('mark_auctions_completed');
     if (error) {
