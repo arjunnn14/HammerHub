@@ -150,42 +150,49 @@ function startCountdown() {
   updateCountdown();
 }
 
-async function updateAuctionWinner() {
-  // Step 1: Get the latest bid for this auction
-  const { data: bids, error: bidError } = await supabaseClient
-    .from('bid')
-    .select('bidder_id')
-    .eq('auction_id', auctionId)
-    .order('created_at', { ascending: false })
-    .limit(1);
+let previousWinnerId = null;
 
-  if (bidError) {
-    console.error('❌ Error fetching latest bid:', bidError);
-    return;
-  }
+function startWinnerPolling() {
+  setInterval(async () => {
+    const { data: latestBid, error: bidError } = await supabaseClient
+      .from('bid')
+      .select('bidder_id')
+      .eq('auction_id', auctionId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();  // Only get the most recent bid
 
-  if (!bids || bids.length === 0) {
-    console.log('⚠️ No bids placed on this auction.');
-    return;
-  }
+    if (bidError) {
+      console.error('❌ Error fetching latest bid:', bidError);
+      return;
+    }
 
-  const winningBidderId = bids[0].bidder_id;
+    if (!latestBid) {
+      console.log('⚠️ No bids placed yet.');
+      return;
+    }
 
-  // Step 2: Update auction table with winner_id and completed status
-  const { error: updateError } = await supabaseClient
-    .from('auction')
-    .update({
-      winner_id: winningBidderId,
-      status: 'completed'
-    })
-    .eq('id', auctionId);
+    const winningBidderId = latestBid.bidder_id;
 
-  if (updateError) {
-    console.error('❌ Error updating auction:', updateError);
-  } else {
-    console.log(`✅ Auction ${auctionId} marked completed with winner ID ${winningBidderId}`);
-  }
+    // Only update if the winner has changed
+    if (winningBidderId !== previousWinnerId) {
+      // Update the winner_id in the auction table
+      const { error: updateError } = await supabaseClient
+        .from('auction')
+        .update({ winner_id: winningBidderId })
+        .eq('id', auctionId);
+
+      if (updateError) {
+        console.error('❌ Error updating winner_id:', updateError);
+      } else {
+        console.log(`✅ Winner updated to bidder ID ${winningBidderId}`);
+        previousWinnerId = winningBidderId;  // Update the stored previous winner
+      }
+    }
+  }, 3000);  // Check every 3 seconds
 }
+
+document.addEventListener('DOMContentLoaded', startWinnerPolling);
 
 function startPricePolling() {
   setInterval(async () => {
