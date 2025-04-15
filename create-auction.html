@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Create Auction - HammerHub</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" />
+  <link rel="stylesheet" href="stylesheet.css"/>
   <style>
     body {
       margin: 0;
@@ -15,13 +14,12 @@
     }
 
     header {
-      background-color: #111;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #222;
-    }
+  background-color: #111;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #222;
+}
 
     .logo {
       height: 40px;
@@ -34,19 +32,19 @@
     }
 
     .auth-btn {
-      background-color: #222;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin: 10px ;
+}
 
-    .auth-btn.primary {
-      background-color: #facc15;
-      color: #000;
-      font-weight: 600;
-    }
+.auth-btn.primary {
+  background-color: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--white);
+}
 
     main {
       display: flex;
@@ -170,9 +168,105 @@
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
-
+    .nav-right {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+    footer {
+      background-color: #111;
+      color: #888;
+      padding: 2.5rem 1.5rem;
+      border-top: 1px solid #222;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-section h3 {
+      color: #facc15;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-section li {
+      margin-bottom: 0.6rem;
+    }
+
+    .footer-section a {
+      color: #aaa;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      color: #facc15;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #222;
+      font-size: 0.85rem;
+    }
+
+    .footer-bottom p {
+      margin: 0.5rem 0;
+    }
+
+    .footer-bottom a {
+      color: #facc15;
+      text-decoration: none;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-links a {
+      color: #aaa;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .social-links a:hover {
+      color: #facc15;
+    }
+
+    @media (max-width: 768px) {
+      .footer-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .footer-section {
+        text-align: center;
+      }
+      
+      .social-links {
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -180,17 +274,11 @@
 
   <header>
     <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
-    <div class="auth-buttons" id="auth-buttons">
-      <div class="notification-wrapper">
-        <span id="notification-bell" class="notification-bell">🔔</span>
-        <span id="notification-badge" class="notification-badge hidden">0</span>
-        <ul id="notification-list" class="notification-list hidden"></ul>
-      </div>
-  
-      <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
-      <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
-      <button class="auth-btn primary" onclick="logout()">Logout</button>
+    <div class="nav-right">
+    <button class="auth-btn">🔔</button>   
+      <button class="auth-btn " onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
+      <button class="auth-btn " onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+      <button class="auth-btn " onclick="window.location.href='profile.html'">👤 Profile</button>
     </div>
   </header>
 
@@ -198,44 +286,45 @@
     <form id="create-auction-form">
       <h2>Create Auction</h2>
 
+      <!-- Product Name -->
       <div class="form-group">
         <input type="text" id="product-name" placeholder="Product Name" required />
-        <i></i>
       </div>
 
+      <!-- Description -->
       <div class="form-group">
         <textarea id="product-description" placeholder="Product Description" required></textarea>
-        <i></i>
       </div>
 
+      <!-- Category Dropdown -->
       <div class="form-group">
         <select id="category-select" required>
-          <option value="">Select Category</option>
+          <option value="" disabled selected>Select Category</option>
         </select>
-        <i></i>
       </div>
 
+      <!-- Image Upload -->
       <div class="form-group">
-        <input type="file" id="product-image" accept="image/*" required />
-        <i></i>
+        <input type="file" id="product-images" name="product-images" accept="image/*" multiple required>
       </div>
       <div id="image-preview"></div>
 
+      <!-- Starting Price -->
       <div class="form-group">
         <input type="number" id="starting-price" placeholder="Starting Price (₹)" min="1" required />
-        <i></i>
       </div>
 
+      <!-- End Time -->
       <div class="form-group">
         <input type="datetime-local" id="end-time" required />
-        <i></i>
       </div>
 
+      <!-- Submit -->
       <button type="submit" id="submit-button">Create Auction</button>
       <div id="status-message"></div>
     </form>
 
-    <!-- Live Preview -->
+    <!-- Preview Card (optional) -->
     <div class="preview-card" id="live-preview" style="display:none;">
       <img id="preview-image" src="" alt="Preview Image" />
       <h3 id="preview-title"></h3>
@@ -244,23 +333,69 @@
   </main>
 
   <footer>
-    <p>© 2025 HammerHub. All rights reserved.</p>
-    <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
+    <div class="footer-container">
+      <div class="footer-section">
+        <h3>About HammerHub</h3>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="careers.html">Careers</a></li>
+          <li><a href="press.html">Press</a></li>
+          <li><a href="blog.html">Blog</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Help & Support</h3>
+        <ul>
+          <li><a href="help.html">Help Center</a></li>
+          <li><a href="safety.html">Safety Tips</a></li>
+          <li><a href="faq.html">FAQs</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Legal</h3>
+        <ul>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="cookie.html">Cookie Policy</a></li>
+          <li><a href="shipping.html">Shipping Policy</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3>Connect With Us</h3>
+        <div class="social-links">
+          <a href="#" aria-label="Twitter"><span>🐦</span></a>
+          <a href="#" aria-label="Facebook"><span>📘</span></a>
+          <a href="#" aria-label="Instagram"><span>📷</span></a>
+          <a href="#" aria-label="LinkedIn"><span>💼</span></a>
+        </div>
+        <p>Subscribe to our newsletter</p>
+        <div class="newsletter-form">
+          <input type="email" placeholder="Your email" />
+          <button class="subscribe-btn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>© 2025 HammerHub. All rights reserved.</p>
+      <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
+    </div>
   </footer>
+  
 
+  <!-- JS Dependencies -->
   <script type="module" src="create-auction.js"></script>
   <script>
     document.getElementById('logo-home').addEventListener('click', () => {
       window.location.href = 'homepage.html';
     });
 
-    // Define logout function to use inline in button
-    async function logout() {
-      const { supabaseClient } = await import('./supabase.js');
-      await supabaseClient.auth.signOut();
-      window.location.href = 'login.html';
-    }
   </script>
 
 </body>
 </html>
+
