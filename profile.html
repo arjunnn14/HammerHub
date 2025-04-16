@@ -395,11 +395,13 @@
 <body>
 
   <header>
-    <div class="logo" onclick="window.location.href='homepage.html'">
-      <img src="logo.png" alt="HammerHub Logo" />
-    </div>
-      <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
+  
+      <div class="nav-right">
+        <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+        <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
+      </div>
     </div>
   </header>
 
