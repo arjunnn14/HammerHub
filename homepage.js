@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkUserAuth();
   await loadNotifications();
   await fetchFeaturedAuctions();
-  await fetchAndDisplayNotifications();
 });
 
+// ✅ Auth Buttons Toggle
 async function checkUserAuth() {
   const { data: userData } = await supabaseClient.auth.getUser();
   currentUserId = userData?.user?.id;
@@ -17,14 +17,15 @@ async function checkUserAuth() {
   const userButtons = document.getElementById('user-buttons');
 
   if (currentUserId) {
-    guestButtons.classList.add('hidden');
-    userButtons.classList.remove('hidden');
+    guestButtons?.classList.add('hidden');
+    userButtons?.classList.remove('hidden');
   } else {
-    guestButtons.classList.remove('hidden');
-    userButtons.classList.add('hidden');
+    guestButtons?.classList.remove('hidden');
+    userButtons?.classList.add('hidden');
   }
 }
 
+// ✅ Load Notifications
 export async function loadNotifications() {
   const bell = document.getElementById('notification-bell');
   const badge = document.getElementById('notification-badge');
@@ -75,6 +76,7 @@ export async function loadNotifications() {
   });
 }
 
+// ✅ Display Notifications
 async function fetchAndDisplayNotifications() {
   const list = document.getElementById('notification-list');
   const badge = document.getElementById('notification-badge');
@@ -86,7 +88,7 @@ async function fetchAndDisplayNotifications() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching notifications:', error);
+    console.error('❌ Notification fetch error:', error);
     return;
   }
 
@@ -125,17 +127,24 @@ function updateBadgeCount(count) {
   }
 }
 
+// ✅ Logout Function
 window.logout = async function () {
   await supabaseClient.auth.signOut();
   window.location.href = 'homepage.html';
 };
 
+// ✅ Fetch & Display Live Auctions
 async function fetchFeaturedAuctions(matchingProductIds = null) {
   const auctionList = document.getElementById('auction-list');
   const heading = document.getElementById('greeting-text');
+
+  if (!auctionList || !heading) {
+    console.error('⛔ Missing auction list or heading element in DOM');
+    return;
+  }
+
   auctionList.innerHTML = 'Loading auctions...';
 
-  // If explicitly empty list passed, exit early
   if (matchingProductIds && matchingProductIds.length === 0) {
     heading.innerText = 'No Live Auctions';
     auctionList.innerHTML = 'No auctions found.';
@@ -155,10 +164,12 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
 
   if (error) {
     console.error('❌ Fetch error:', error);
-    auctionList.innerHTML = 'Failed to load auctions.';
     heading.innerText = 'Auction Error';
+    auctionList.innerHTML = 'Failed to load auctions.';
     return;
   }
+
+  console.log('📦 Auctions fetched:', data);
 
   const now = new Date();
   const validAuctions = data.filter(auction => new Date(auction.end_time) > now);
