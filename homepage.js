@@ -138,12 +138,13 @@ async function checkAuthButtons() {
   const authButtons = document.querySelector('.auth-buttons');
 
   if (session && session.user) {
-    authButtons.innerHTML = 
-      <button class="auth-btn" id="create-auction-btn"> ➕ Create Auction </button>
+    authButtons.innerHTML = `
+      <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" id="profile-btn">👤 Profile</button>
       <button class="auth-btn primary" id="logout-btn">Logout</button>
-    ;
+
+    `;
 
     document.getElementById('logout-btn').addEventListener('click', logout);
     document.getElementById('profile-btn').addEventListener('click', () => {
@@ -164,3 +165,10 @@ async function logout() {
     window.location.reload();
   }
 }
+
+// 🛎️ Notifications (You can keep or update this function as needed)
+import { loadNotifications } from './notification.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNotifications();
+});
