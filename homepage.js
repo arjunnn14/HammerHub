@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabase.js';
-import { loadNotifications, listenForNewNotifications } from './notification.js';
+import { loadNotifications} from './notification.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchFeaturedAuctions();
