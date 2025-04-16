@@ -15,12 +15,20 @@
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background-color: #111;
-      border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #111;
+  border-bottom: 1px solid #333;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
+
     }
 
     .logo {
@@ -38,18 +46,7 @@
       gap: 1rem;
     }
 
-    .nav-buttons button {
-      background-color: #222;
-      color: #fff;
-      border: 1px solid #444;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      font-weight: 500;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
+    
     .nav-buttons button:hover {
       background-color: #333;
     }
