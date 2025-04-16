@@ -76,6 +76,23 @@
     </form>
     <button id="google-login">Login with Google</button>
     <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+    <script>
+  function loginUser() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const storedEmail = localStorage.getItem("userEmail");
+    const storedPassword = localStorage.getItem("userPassword");
+
+    if (email === storedEmail && password === storedPassword) {
+      localStorage.setItem("loggedIn", "true");
+      window.location.href = "homepage.html";
+    } else {
+      alert("Invalid email or password!");
+    }
+  }
+</script>
+
   </div>
   <script type="module" src="login.js"></script>
 </body>
