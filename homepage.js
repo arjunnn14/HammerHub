@@ -139,7 +139,7 @@ async function checkAuthButtons() {
 
   if (session && session.user) {
     authButtons.innerHTML = 
-      <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
+      <button class="auth-btn" id="create-auction-btn"> ➕ Create Auction </button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" id="profile-btn">👤 Profile</button>
       <button class="auth-btn primary" id="logout-btn">Logout</button>
