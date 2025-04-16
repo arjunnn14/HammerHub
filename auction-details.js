@@ -1,4 +1,5 @@
 import { supabaseClient } from './supabase.js';
+import './notification.js'; // Make sure this is only imported ONCE per page
 
 const urlParams = new URLSearchParams(window.location.search);
 const auctionId = urlParams.get('id');
@@ -21,30 +22,68 @@ const shareButton = document.getElementById('share-auction-btn');
 let endTime;
 let currentPrice = 0;
 let sellerId;
-let currentUserId;
-let previousWinnerId = null;
-let previousBids = {};
 
-async function initPage() {
+let currentUserId;
+let currentAuctionId;
+
+document.addEventListener('DOMContentLoaded', async () => {
   if (!auctionId) {
     statusMessage.textContent = '❌ Invalid auction ID';
     return;
   }
 
-  const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-  currentUserId = userData?.user?.id;
-
-  if (currentUserId && auctionId) {
-    await checkIfInWatchlist(currentUserId, auctionId);
-  }
-
   await loadAuctionDetails();
   startCountdown();
   startPricePolling();
-  startWinnerPolling();
-  startNotificationPolling();
-}
 
+  const { data: userData } = await supabaseClient.auth.getUser();
+  currentUserId = userData?.user?.id;
+  currentAuctionId = auctionId;
+
+  if (currentUserId && currentAuctionId) {
+    checkIfInWatchlist(currentUserId, currentAuctionId);
+  }
+
+  // Watchlist button
+  document.getElementById('watchlist-btn').addEventListener('click', async () => {
+    const inList = await isInWatchlist(currentUserId, currentAuctionId);
+    if (inList) {
+      await removeFromWatchlist(currentUserId, currentAuctionId);
+    } else {
+      await addToWatchlist(currentUserId, currentAuctionId);
+    }
+    checkIfInWatchlist(currentUserId, currentAuctionId);
+  });
+
+  // Share button
+  const shareButton = document.getElementById('share-auction-btn');
+  if (shareButton) {
+    shareButton.addEventListener('click', async () => {
+      const shareUrl = `${window.location.origin}/auction-details.html?id=${auctionId}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Check out this auction on HammerHub!',
+            text: 'Place your bid before it ends! 🔨',
+            url: shareUrl,
+          });
+        } catch (error) {
+          console.error('Web Share API failed:', error);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          alert('🔗 Auction link copied to clipboard!');
+        } catch (error) {
+          console.error('Clipboard copy failed:', error);
+          alert('❌ Failed to copy link. Please try manually.');
+        }
+      }
+    });
+  }
+});
+
+// Load auction details
 async function loadAuctionDetails() {
   const { data, error } = await supabaseClient
     .from('auction')
@@ -65,7 +104,7 @@ async function loadAuctionDetails() {
     .single();
 
   if (error || !data) {
-    console.error('Error fetching auction:', error);
+    console.error('Auction fetch error:', error);
     statusMessage.textContent = '❌ Failed to load auction';
     return;
   }
@@ -79,12 +118,12 @@ async function loadAuctionDetails() {
   startingPriceEl.textContent = data.starting_price;
   currentPrice = data.current_price;
   currentPriceEl.textContent = currentPrice;
-  endTimeInputEl.value = data.end_time;
-  sellerId = data.seller_id;
 
-  endTime = new Date(data.end_time); // store globally for countdown
+  endTime = new Date(data.end_time);
+  sellerId = data.seller_id;
 }
 
+// Countdown timer
 function startCountdown() {
   function updateCountdown() {
     const now = new Date();
@@ -94,7 +133,6 @@ function startCountdown() {
       endTimeEl.textContent = 'Auction Ended';
       clearInterval(timerInterval);
       bidForm.style.display = 'none';
-      updateAuctionWinner();
       return;
     }
 
@@ -106,45 +144,111 @@ function startCountdown() {
     endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
   }
 
-  const timerInterval = setInterval(updateCountdown, 1000);
   updateCountdown();
+  var timerInterval = setInterval(updateCountdown, 1000);
 }
 
-if (shareButton) {
-  shareButton.addEventListener('click', async () => {
-    const shareUrl = `${window.location.origin}/auction-details.html?id=${auctionId}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Check out this auction on HammerHub!',
-          text: 'Place your bid before it ends! 🔨',
-          url: shareUrl,
-        });
-      } catch (error) {
-        console.error('Web Share API failed:', error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        alert('🔗 Auction link copied to clipboard!');
-      } catch (error) {
-        console.error('Clipboard copy failed:', error);
-        alert('❌ Failed to copy link. Please try manually.');
-      }
+// Price polling every 3 seconds
+function startPricePolling() {
+  setInterval(async () => {
+    const { data, error } = await supabaseClient
+      .from('auction')
+      .select('current_price')
+      .eq('id', auctionId)
+      .single();
+
+    if (!error && data?.current_price !== currentPrice) {
+      currentPrice = data.current_price;
+      currentPriceEl.textContent = currentPrice;
     }
-  });
+  }, 3000);
 }
 
-watchlistBtn.addEventListener('click', async () => {
-  const inList = await isInWatchlist(currentUserId, auctionId);
-  if (inList) {
-    await removeFromWatchlist(currentUserId, auctionId);
-  } else {
-    await addToWatchlist(currentUserId, auctionId);
+// Bid submission
+bidForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  statusMessage.textContent = '';
+
+  const bidAmount = parseFloat(bidAmountInput.value);
+
+  if (isNaN(bidAmount) || bidAmount <= currentPrice) {
+    statusMessage.textContent = '❌ Your bid must be valid and higher than current price.';
+    return;
   }
-  checkIfInWatchlist(currentUserId, auctionId);
+
+  if (!(await checkAuctionExists(auctionId))) {
+    statusMessage.textContent = '❌ Auction not found.';
+    return;
+  }
+
+  const userId = await checkUserExists();
+  if (!userId) {
+    statusMessage.textContent = '❌ You must be logged in.';
+    return;
+  }
+
+  if (userId === sellerId) {
+    statusMessage.textContent = '⚠ You cannot bid on your own auction.';
+    return;
+  }
+
+  const { data: previousBids } = await supabaseClient
+    .from('bid')
+    .select('bidder_id, bid_amount')
+    .eq('auction_id', auctionId)
+    .order('bid_amount', { ascending: false })
+    .limit(2);
+
+  const { error: insertError } = await supabaseClient.from('bid').insert([
+    {
+      auction_id: auctionId,
+      bidder_id: userId,
+      bid_amount: bidAmount,
+    },
+  ]);
+
+  if (insertError) {
+    console.error('Bid error:', insertError);
+    statusMessage.textContent = '❌ Failed to place bid.';
+    return;
+  }
+
+  await supabaseClient
+    .from('auction')
+    .update({ current_price: bidAmount })
+    .eq('id', auctionId);
+
+  const { data: auctionInfo } = await supabaseClient
+    .from('auction')
+    .select('product(name), seller_id')
+    .eq('id', auctionId)
+    .single();
+
+  const productName = auctionInfo?.product?.name || 'your item';
+  const sellerUserId = auctionInfo?.seller_id;
+
+  statusMessage.textContent = '✅ Bid placed!';
+  bidAmountInput.value = '';
 });
 
+// Helper: check auction exists
+async function checkAuctionExists(auctionId) {
+  const { data, error } = await supabaseClient
+    .from('auction')
+    .select('id')
+    .eq('id', auctionId)
+    .single();
+
+  return !error && data;
+}
+
+// Helper: check user logged in
+async function checkUserExists() {
+  const { data: userData, error } = await supabaseClient.auth.getUser();
+  return userData?.user?.id || null;
+}
+
+// Watchlist logic
 async function isInWatchlist(userId, auctionId) {
   const { data } = await supabaseClient
     .from('watchlist')
@@ -168,9 +272,17 @@ async function removeFromWatchlist(userId, auctionId) {
 }
 
 async function checkIfInWatchlist(userId, auctionId) {
+  const btn = document.getElementById('watchlist-btn');
   const inList = await isInWatchlist(userId, auctionId);
-  watchlistBtn.textContent = inList ? '✅ In Watchlist' : '⭐ Add to Watchlist';
+  btn.textContent = inList ? '✅ In Watchlist' : '⭐ Add to Watchlist';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNotifications();             // Load existing notifications
+  listenForNewNotifications();     // Real-time updates (optional)
+  startNotificationPolling();
+  startWinnerPolling();
+});
 
 function startWinnerPolling() {
   setInterval(async () => {
@@ -242,21 +354,6 @@ async function sendOutbidNotification(auctionId) {
       }
     ]);
   }
-}
-
-function startPricePolling() {
-  setInterval(async () => {
-    const { data, error } = await supabaseClient
-      .from('auction')
-      .select('current_price')
-      .eq('id', auctionId)
-      .single();
-
-    if (!error && data?.current_price !== currentPrice) {
-      currentPrice = data.current_price;
-      currentPriceEl.textContent = currentPrice;
-    }
-  }, 3000);
 }
 
 bidForm.addEventListener('submit', async (e) => {
@@ -343,5 +440,3 @@ bidForm.addEventListener('submit', async (e) => {
   statusMessage.textContent = '✅ Bid placed successfully!';
   bidAmountInput.value = '';
 });
-
-document.addEventListener('DOMContentLoaded', initPage);
