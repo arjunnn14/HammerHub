@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function autoFillEndTime() {
   const endInput = document.getElementById('end-time');
   const now = new Date();
-  now.setDate(now.getDate() + 7); // +7 days
+  now.setDate(now.getDate() + 7);
   endInput.value = now.toISOString().slice(0, 16);
 }
 
@@ -46,7 +46,6 @@ function setupImagePreview() {
 
     if (!file) return;
 
-    // Validate file size (max 3MB)
     const maxSize = 3 * 1024 * 1024;
     if (file.size > maxSize) {
       previewDiv.innerHTML = `<p style="color: red;">❌ Image too large (max 3MB)</p>`;
@@ -54,7 +53,6 @@ function setupImagePreview() {
       return;
     }
 
-    // Validate image type
     if (!file.type.startsWith('image/')) {
       previewDiv.innerHTML = `<p style="color: red;">❌ Invalid image type</p>`;
       fileInput.value = '';
@@ -65,8 +63,8 @@ function setupImagePreview() {
     reader.onload = e => {
       const img = document.createElement('img');
       img.src = e.target.result;
-      img.style.maxWidth = '200px';
-      img.style.marginTop = '10px';
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '8px';
       previewDiv.appendChild(img);
     };
     reader.readAsDataURL(file);
@@ -82,21 +80,19 @@ async function handleCreateAuction(event) {
   const description = document.getElementById('product-description').value.trim();
   const categoryId = document.getElementById('category-select').value;
   const imageFileInput = document.getElementById('product-image');
-  
-  // Check if the image file input exists and has a selected file
-  const imageFile = imageFileInput ? imageFileInput.files[0] : null;
+  const imageFile = imageFileInput?.files[0];
 
   const startingPrice = parseFloat(document.getElementById('starting-price').value);
   const endTime = document.getElementById('end-time').value;
 
   if (!imageFile || isNaN(startingPrice) || !name || !description || !categoryId || !endTime) {
     statusMessage.textContent = '❌ Please fill in all fields.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   if (startingPrice <= 0) {
     statusMessage.textContent = '❌ Starting price must be greater than 0.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   const { data: userData, error: authError } = await supabaseClient.auth.getUser();
@@ -104,7 +100,7 @@ async function handleCreateAuction(event) {
 
   if (authError || !sellerId) {
     statusMessage.textContent = '❌ You must be logged in to create an auction.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   // Upload image
@@ -116,7 +112,7 @@ async function handleCreateAuction(event) {
   if (uploadError) {
     console.error('Image upload error:', uploadError);
     statusMessage.textContent = '❌ Failed to upload image.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   const imageUrl = `https://jzcmbrqogyghyhvwzgps.supabase.co/storage/v1/object/public/product-images/${fileName}`;
@@ -132,7 +128,7 @@ async function handleCreateAuction(event) {
   if (productError) {
     console.error('Product insert error:', productError);
     statusMessage.textContent = '❌ Failed to create product.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   const productId = productData.id;
@@ -150,7 +146,7 @@ async function handleCreateAuction(event) {
   if (auctionError) {
     console.error('Auction insert error:', auctionError);
     statusMessage.textContent = '❌ Failed to create auction.';
-    return;  // This return is correct as it's inside the function
+    return;
   }
 
   statusMessage.textContent = '✅ Auction created! Redirecting...';
