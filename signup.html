@@ -70,18 +70,16 @@
   <div class="auth-box">
     <h2>Sign Up</h2>
     <form id="signup-form">
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
+      <input type="email" id="email" required placeholder="Email">
+      <input type="password" id="password" required placeholder="Password">
       <button type="submit">Sign Up</button>
     </form>
+
     <button id="google-signup">Sign up with Google</button>
     <p>Already have an account? <a href="login.html">Log in</a></p>
   </div>
-  <script type="module" src="signup.js"></script>
-  <script>localStorage.setItem("userEmail", email);
-localStorage.setItem("userPassword", password);
-localStorage.setItem("loggedIn", "true"); // Optional: auto login after sign-up
-window.location.href = "homepage.html";
-</script> 
+
+  <!-- Load the JS as a module -->
+  <script type="module" src="./signup.js"></script>
 </body>
 </html>
