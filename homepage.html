@@ -99,6 +99,21 @@
         justify-content: center;
       }
     }
+    .nav-btn {
+      background-color: transparent;
+      color: white;
+      border: 1px solid white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.4rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .auth-btn:hover,
+    .nav-btn:hover {
+      background-color: #333;
+    }
   </style>
 </head>
 <body>
@@ -120,7 +135,7 @@
     <button class="auth-btn " onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
     <button class="auth-btn " onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
     <button class="auth-btn " onclick="window.location.href='profile.html'">👤 Profile</button>
-    <button class="auth-btn " onclick="logout()">Log Out</button>
+     <button onclick="logout()" class="nav-btn" id="logout-btn">Log Out</button>
     </div>
     </div>
   </header>
