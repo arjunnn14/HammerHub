@@ -40,65 +40,6 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
   }
 });
 
-async function updateAllAuctionStatuses() {
-  try {
-    console.log('🚀 Running updateAllAuctionStatuses...');
-    const now = new Date().toISOString();
-
-    const { data: auctions, error } = await supabaseClient
-      .from('auction')
-      .select('id, end_time, status')
-      .lt('end_time', now)
-      .neq('status', 'completed');
-
-    if (error) {
-      console.error('❌ Fetch error:', error);
-      return;
-    }
-
-    console.log('⏳ Auctions to update:', auctions);
-
-    for (const auction of auctions) {
-      const { data: topBid, error: bidError } = await supabaseClient
-        .from('bid')
-        .select('bidder_id')
-        .eq('auction_id', auction.id)
-        .order('bid_amount', { ascending: false })
-        .limit(1)
-        .maybeSingle(); // handles no-bid case safely
-
-      console.log(`🏷️ Auction ${auction.id} Top Bid:`, topBid);
-
-      if (bidError) {
-        console.error(`❌ Bid fetch error for auction ${auction.id}:`, bidError);
-        continue;
-      }
-
-      const updatePayload = topBid
-        ? { status: 'completed', winner_id: topBid.bidder_id }
-        : { status: 'completed' };
-
-      const { data: updateData, error: updateError } = await supabaseClient
-        .from('auction')
-        .update(updatePayload)
-        .eq('id', auction.id)
-        .select(); // to verify update happened
-
-      if (updateError) {
-        console.error(`❌ Update error for auction ${auction.id}:`, updateError);
-      } else {
-        console.log(`✅ Auction ${auction.id} updated:`, updateData);
-      }
-    }
-
-    console.log('🎯 All auctions processed.');
-  } catch (err) {
-    console.error('💥 Fatal error:', err);
-  }
-}
-updateAllAuctionStatuses();
-setInterval(updateAllAuctionStatuses, 10000);
-
 // Google signup
 document.getElementById('google-signup').addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
