@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const guestButtons = document.getElementById("guest-buttons");
     const userButtons = document.getElementById("user-buttons");
 
+}};
+
     // Debug logs
     console.log("Logged in:", isLoggedIn);
     console.log("Guest Buttons Element:", guestButtons);
@@ -21,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       guestButtons.style.display = "flex";
       userButtons.style.display = "none";
     }
-  });
+  
 
   function logout() {
     localStorage.removeItem("loggedIn");
