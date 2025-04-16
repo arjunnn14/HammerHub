@@ -138,12 +138,12 @@ async function checkAuthButtons() {
   const authButtons = document.querySelector('.auth-buttons');
 
   if (session && session.user) {
-    authButtons.innerHTML = `
+    authButtons.innerHTML = 
       <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" id="profile-btn">👤 Profile</button>
       <button class="auth-btn primary" id="logout-btn">Logout</button>
-    `;
+    ;
 
     document.getElementById('logout-btn').addEventListener('click', logout);
     document.getElementById('profile-btn').addEventListener('click', () => {
@@ -165,7 +165,7 @@ async function logout() {
   }
 }
 
-const { data, error } = await supabase.rpc('sync-ended-auctions');
+const { data, error } = await supabaseClient.rpc('sync-ended-auctions');
 
 if (error) {
   console.error('Error calling edge function:', error);
