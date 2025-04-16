@@ -158,10 +158,24 @@ async function checkAuthButtons() {
 
 // 🚪 Logout
 async function logout() {
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) {
-    console.error('Logout failed:', error.message);
-  } else {
-    window.location.reload();
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    
+    if (error) {
+      console.error('Logout error:', error.message);
+      alert('Logout failed. Please try again.');
+      return;
+    }
+    
+    // Clear any local storage/session storage
+    localStorage.removeItem('loggedIn');
+    sessionStorage.clear();
+    
+    // Redirect to homepage or login page
+    window.location.href = 'homepage.html';
+    
+  } catch (err) {
+    console.error('Unexpected logout error:', err);
+    alert('An unexpected error occurred during logout.');
   }
 }
