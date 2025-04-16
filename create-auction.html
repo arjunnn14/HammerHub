@@ -32,13 +32,13 @@
     }
 
     .auth-btn {
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  margin: 10px ;
-}
+      background-color: #222;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
 .auth-btn.primary {
   background-color: var(--primary);
@@ -273,14 +273,16 @@
 <body>
 
   <header>
-    <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
-   
-      <button class="auth-btn " onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
-      <button class="auth-btn " onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn " onclick="window.location.href='profile.html'">👤 Profile</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
+  
+      <div class="nav-right">
+        <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+        <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
+      </div>
     </div>
   </header>
-
+  
   <main>
     <form id="create-auction-form">
       <h2>Create Auction</h2>
@@ -304,7 +306,7 @@
 
       <!-- Image Upload -->
       <div class="form-group">
-        <input type="file" id="product-image" accept="image/*" multiple required>
+        <input type="file" id="product-images" name="product-images" accept="image/*" multiple required>
       </div>
       <div id="image-preview"></div>
 
