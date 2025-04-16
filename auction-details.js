@@ -21,6 +21,7 @@ let sellerId;
 
 let currentUserId;
 let currentAuctionId;
+let currentSlide = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!auctionId) {
@@ -91,7 +92,7 @@ async function loadAuctionDetails() {
       seller_id,
       product:product!auction_product_id_fkey (
         name,
-        image_url,  // Corrected to image_url, not commented out
+        image_url,
         description,
         category:category_id (name)
       )
@@ -140,35 +141,27 @@ async function loadAuctionDetails() {
     // Show first image
     showSlide(0);
   } else {
-    // Fallback if no images (shouldn't happen if your DB is properly structured)
     imageSlider.innerHTML = '<div class="slide"><p>No images available</p></div>';
   }
 
-  // Set auction timing info
   endTime = new Date(data.end_time);
   sellerId = data.seller_id;
-
-  // Update countdown timer
-  updateCountdown();
 }
 
 // Slide show function
 function showSlide(index) {
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.slider-dot');
-  
+
   if (slides.length === 0) return;
-  
-  // Handle wrap-around
+
   if (index >= slides.length) index = 0;
   if (index < 0) index = slides.length - 1;
-  
-  // Update display
+
   slides.forEach(slide => slide.classList.remove('active'));
   slides[index].classList.add('active');
   currentSlide = index;
-  
-  // Update dots
+
   dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
 }
 
@@ -193,8 +186,8 @@ function startCountdown() {
     endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
   }
 
+  const timerInterval = setInterval(updateCountdown, 1000);
   updateCountdown();
-  var timerInterval = setInterval(updateCountdown, 1000);
 }
 
 // Price polling every 3 seconds
