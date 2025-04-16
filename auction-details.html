@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
   <style>
-    /* Add this style section for the footer improvements */
+    /* Footer Styles */
     footer {
       background-color: #111;
       color: #888;
@@ -15,7 +15,6 @@
       border-top: 1px solid #222;
       font-family: 'Segoe UI', sans-serif;
     }
-
     .footer-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -23,37 +22,30 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 2rem;
     }
-
     .footer-section {
       margin-bottom: 1.5rem;
     }
-
     .footer-section h3 {
       color: #facc15;
       margin-bottom: 1rem;
       font-size: 1.1rem;
     }
-
     .footer-section ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-
     .footer-section li {
       margin-bottom: 0.6rem;
     }
-
     .footer-section a {
       color: #aaa;
       text-decoration: none;
       transition: color 0.3s ease;
     }
-
     .footer-section a:hover {
       color: #facc15;
     }
-
     .footer-bottom {
       text-align: center;
       margin-top: 2rem;
@@ -61,41 +53,33 @@
       border-top: 1px solid #222;
       font-size: 0.85rem;
     }
-
     .footer-bottom p {
       margin: 0.5rem 0;
     }
-
     .footer-bottom a {
       color: #facc15;
       text-decoration: none;
     }
-
     .social-links {
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
     }
-
     .social-links a {
       color: #aaa;
       font-size: 1.2rem;
       transition: color 0.3s ease;
     }
-
     .social-links a:hover {
       color: #facc15;
     }
-
     @media (max-width: 768px) {
       .footer-container {
         grid-template-columns: 1fr;
       }
-      
       .footer-section {
         text-align: center;
       }
-      
       .social-links {
         justify-content: center;
       }
@@ -110,11 +94,15 @@
       </a>
     </div>
     <div class="auth-buttons" id="auth-buttons">
+      <button id="notification-bell" title="Notifications">🔔</button>
       <span id="notification-badge" class="notification-badge hidden">0</span>
       <ul id="notification-list" class="notification-list hidden"></ul>
       <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
+      <button id="logout-button" class="auth-btn">🚪 Log Out</button>
+      <button id="login-button" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+      <button id="signup-button" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
     </div>
   </header>
 
@@ -122,12 +110,9 @@
   <main class="auction-container">
     <h2 class="yellow-text" id="product-name">Auction Item</h2>
     <div class="auction-content">
-      <!-- Image Section -->
       <div class="image-wrapper">
         <img id="auction-image" src="" alt="Product Image" />
       </div>
-
-      <!-- Auction Details -->
       <div class="auction-info-box">
         <p><span class="yellow-text">Description:</span> <span id="auction-description"></span></p>
         <p><span class="yellow-text">Category:</span> <span id="auction-category"></span></p>
@@ -135,20 +120,11 @@
         <p><span class="yellow-text">Current Price:</span> ₹<span id="current-price"></span></p>
         <p><span class="yellow-text">Ends In:</span> <span id="end-time"></span></p>
         <button id="watchlist-btn" class="yellow-btn watchlist-btn">⭐ Add to Watchlist</button>
-
-        <!-- Place Bid Form -->
         <form id="place-bid-form">
           <input type="number" id="bid-amount" placeholder="Your Bid (₹)" min="1" required />
           <button id="place-bid-btn" type="submit">Place Bid</button>
         </form>
-
-        <!-- Share Auction Button -->
-        <button id="share-auction-btn" type="button"
-          title="Share this auction"
-          style="background-color: #333; color: #fff; margin-top: 10px;">
-          🔗 Share
-        </button>
-
+        <button id="share-auction-btn" type="button" title="Share this auction" style="background-color: #333; color: #fff; margin-top: 10px;">🔗 Share</button>
         <div id="status-message" style="margin-top: 10px;"></div>
       </div>
     </div>
@@ -166,7 +142,6 @@
           <li><a href="blog.html">Blog</a></li>
         </ul>
       </div>
-      
       <div class="footer-section">
         <h3>Help & Support</h3>
         <ul>
@@ -176,7 +151,6 @@
           <li><a href="contact.html">Contact Us</a></li>
         </ul>
       </div>
-      
       <div class="footer-section">
         <h3>Legal</h3>
         <ul>
@@ -186,7 +160,6 @@
           <li><a href="shipping.html">Shipping Policy</a></li>
         </ul>
       </div>
-      
       <div class="footer-section">
         <h3>Connect With Us</h3>
         <div class="social-links">
@@ -202,7 +175,6 @@
         </div>
       </div>
     </div>
-    
     <div class="footer-bottom">
       <p>© 2025 HammerHub. All rights reserved.</p>
       <p>Contact us: <a href="mailto:HammerHub@gmail.com">HammerHub@gmail.com</a> | 123 456 7890</p>
