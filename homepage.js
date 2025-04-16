@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSearch();
   setupCategoryFilter();
   checkAuthButtons();
-});
-  document.addEventListener("DOMContentLoaded", function () {
     const isLoggedIn = localStorage.getItem("loggedIn") === "true";
     const guestButtons = document.getElementById("guest-buttons");
     const userButtons = document.getElementById("user-buttons");
