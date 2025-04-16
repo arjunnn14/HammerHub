@@ -7,6 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuthButtons();
 }};
 
+document.addEventListener("DOMContentLoaded", function () {
+  const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+  const guestButtons = document.getElementById("guest-buttons");
+  const userButtons = document.getElementById("user-buttons");
+
+  // Show relevant buttons based on login state
+  if (isLoggedIn) {
+    guestButtons.style.display = "none";
+    userButtons.style.display = "flex";
+  } else {
+    guestButtons.style.display = "flex";
+    userButtons.style.display = "none";
+  }
+});
+
+
 // 🔥 Fetch Auctions & Remove Expired Ones
 async function fetchFeaturedAuctions(matchingProductIds = null) {
   const auctionList = document.getElementById('auction-list');
