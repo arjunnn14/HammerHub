@@ -152,27 +152,7 @@
     </div>
   </footer>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-      const guestButtons = document.getElementById("guest-buttons");
-      const userButtons = document.getElementById("user-buttons");
 
-      if (isLoggedIn) {
-        guestButtons.style.display = "none";
-        userButtons.style.display = "flex";
-      } else {
-        guestButtons.style.display = "flex";
-        userButtons.style.display = "none";
-      }
-    });
-
-    function logout() {
-      localStorage.removeItem("loggedIn");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userPassword");
-      window.location.href = "homepage.html";
-    }
-  </script>
+  
 </body>
 </html>
