@@ -1,5 +1,5 @@
 import { supabaseClient } from './supabase.js';
-import './notification.js'; // Make sure this is only imported ONCE per page
+import './notification.js'; // Ensure notifications are loaded once
 
 const urlParams = new URLSearchParams(window.location.search);
 const auctionId = urlParams.get('id');
@@ -14,10 +14,6 @@ const endTimeEl = document.getElementById('end-time');
 const bidForm = document.getElementById('place-bid-form');
 const bidAmountInput = document.getElementById('bid-amount');
 const statusMessage = document.getElementById('status-message');
-const endTimeInputEl = document.getElementById('auction-end-time');
-const watchlistBtn = document.getElementById('watchlist-btn');
-const auctionIdEl = document.getElementById('auction-id');
-const shareButton = document.getElementById('share-auction-btn');
 
 let endTime;
 let currentPrice = 0;
@@ -83,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Load auction details
+// Load auction details with multiple image support
 async function loadAuctionDetails() {
   const { data, error } = await supabaseClient
     .from('auction')
@@ -95,7 +91,7 @@ async function loadAuctionDetails() {
       seller_id,
       product:product!auction_product_id_fkey (
         name,
-        image_url,
+        image_url,  // Corrected to image_url, not commented out
         description,
         category:category_id (name)
       )
@@ -111,16 +107,69 @@ async function loadAuctionDetails() {
 
   const { product } = data;
 
+  // Set basic product info
   productNameEl.textContent = product.name;
-  imageEl.src = product.image_url;
   descriptionEl.textContent = product.description;
   categoryEl.textContent = product.category?.name || 'N/A';
   startingPriceEl.textContent = data.starting_price;
   currentPrice = data.current_price;
   currentPriceEl.textContent = currentPrice;
 
+  // Handle multiple images
+  const imageSlider = document.getElementById('image-slider');
+  const dotsContainer = document.getElementById('slider-dots');
+  imageSlider.innerHTML = '';
+  dotsContainer.innerHTML = '';
+
+  if (product.image_url && product.image_url.length > 0) {
+    // Create slides for each image
+    product.image_url.forEach((url, index) => {
+      const slide = document.createElement('div');
+      slide.className = 'slide';
+      slide.innerHTML = `<img src="${url}" alt="Product image ${index + 1}" />`;
+      imageSlider.appendChild(slide);
+
+      // Create navigation dot
+      const dot = document.createElement('div');
+      dot.className = 'slider-dot';
+      dot.dataset.index = index;
+      dot.addEventListener('click', () => showSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+
+    // Show first image
+    showSlide(0);
+  } else {
+    // Fallback if no images (shouldn't happen if your DB is properly structured)
+    imageSlider.innerHTML = '<div class="slide"><p>No images available</p></div>';
+  }
+
+  // Set auction timing info
   endTime = new Date(data.end_time);
   sellerId = data.seller_id;
+
+  // Update countdown timer
+  updateCountdown();
+}
+
+// Slide show function
+function showSlide(index) {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slider-dot');
+  
+  if (slides.length === 0) return;
+  
+  // Handle wrap-around
+  if (index >= slides.length) index = 0;
+  if (index < 0) index = slides.length - 1;
+  
+  // Update display
+  slides.forEach(slide => slide.classList.remove('active'));
+  slides[index].classList.add('active');
+  currentSlide = index;
+  
+  // Update dots
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
 }
 
 // Countdown timer
@@ -188,7 +237,7 @@ bidForm.addEventListener('submit', async (e) => {
   }
 
   if (userId === sellerId) {
-    statusMessage.textContent = '⚠ You cannot bid on your own auction.';
+    statusMessage.textContent = '⚠️ You cannot bid on your own auction.';
     return;
   }
 
@@ -228,215 +277,5 @@ bidForm.addEventListener('submit', async (e) => {
   const sellerUserId = auctionInfo?.seller_id;
 
   statusMessage.textContent = '✅ Bid placed!';
-  bidAmountInput.value = '';
-});
-
-// Helper: check auction exists
-async function checkAuctionExists(auctionId) {
-  const { data, error } = await supabaseClient
-    .from('auction')
-    .select('id')
-    .eq('id', auctionId)
-    .single();
-
-  return !error && data;
-}
-
-// Helper: check user logged in
-async function checkUserExists() {
-  const { data: userData, error } = await supabaseClient.auth.getUser();
-  return userData?.user?.id || null;
-}
-
-// Watchlist logic
-async function isInWatchlist(userId, auctionId) {
-  const { data } = await supabaseClient
-    .from('watchlist')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('auction_id', auctionId)
-    .maybeSingle();
-  return !!data;
-}
-
-async function addToWatchlist(userId, auctionId) {
-  await supabaseClient.from('watchlist').insert([{ user_id: userId, auction_id: auctionId }]);
-}
-
-async function removeFromWatchlist(userId, auctionId) {
-  await supabaseClient
-    .from('watchlist')
-    .delete()
-    .eq('user_id', userId)
-    .eq('auction_id', auctionId);
-}
-
-async function checkIfInWatchlist(userId, auctionId) {
-  const btn = document.getElementById('watchlist-btn');
-  const inList = await isInWatchlist(userId, auctionId);
-  btn.textContent = inList ? '✅ In Watchlist' : '⭐ Add to Watchlist';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadNotifications();             // Load existing notifications
-  listenForNewNotifications();     // Real-time updates (optional)
-  startNotificationPolling();
-  startWinnerPolling();
-});
-
-function startWinnerPolling() {
-  setInterval(async () => {
-    const { data: latestBid, error: bidError } = await supabaseClient
-      .from('bid')
-      .select('bidder_id')
-      .eq('auction_id', auctionId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (bidError || !latestBid) return;
-
-    const winningBidderId = latestBid.bidder_id;
-    if (winningBidderId !== previousWinnerId) {
-      const { error: updateError } = await supabaseClient
-        .from('auction')
-        .update({ winner_id: winningBidderId })
-        .eq('id', auctionId);
-
-      if (!updateError) previousWinnerId = winningBidderId;
-    }
-  }, 3000);
-}
-
-function startNotificationPolling() {
-  setInterval(async () => {
-    const { data: auctions, error: auctionsError } = await supabaseClient
-      .from('auction')
-      .select('id, current_price')
-      .neq('status', 'completed');
-
-    if (auctionsError) return;
-
-    const { data: bids, error: bidsError } = await supabaseClient
-      .from('bid')
-      .select('id, auction_id, bidder_id, bid_amount')
-      .eq('bidder_id', currentUserId)
-      .order('created_at', { ascending: false });
-
-    if (bidsError) return;
-
-    bids.forEach(bid => {
-      const auction = auctions.find(a => a.id === bid.auction_id);
-      if (auction && bid.bid_amount < auction.current_price) {
-        if (!previousBids[bid.auction_id] || previousBids[bid.auction_id] !== auction.current_price) {
-          sendOutbidNotification(bid.auction_id);
-          previousBids[bid.auction_id] = auction.current_price;
-        }
-      }
-    });
-  }, 3000);
-}
-
-async function sendOutbidNotification(auctionId) {
-  const { data, error } = await supabaseClient
-    .from('auction')
-    .select('product(name), seller_id')
-    .eq('id', auctionId)
-    .single();
-
-  if (!error && data) {
-    await supabaseClient.from('notifications').insert([
-      {
-        user_id: currentUserId,
-        auction_id: auctionId,
-        message: `🔔 You have been outbid on "${data.product.name}".`,
-        read: false
-      }
-    ]);
-  }
-}
-
-bidForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  statusMessage.textContent = '';
-
-  const bidAmount = parseFloat(bidAmountInput.value);
-  if (isNaN(bidAmount) || bidAmount <= currentPrice) {
-    statusMessage.textContent = '❌ Your bid must be higher than the current price.';
-    return;
-  }
-
-  const { data: userData, error: authError } = await supabaseClient.auth.getUser();
-  const userId = userData?.user?.id;
-  if (authError || !userId) {
-    statusMessage.textContent = '❌ You must be logged in to place a bid.';
-    return;
-  }
-
-  if (userId === sellerId) {
-    statusMessage.textContent = '⚠️ You cannot bid on your own auction.';
-    return;
-  }
-
-  const { data: walletData, error: walletError } = await supabaseClient
-    .from('wallet')
-    .select('balance')
-    .eq('user_id', userId)
-    .single();
-
-  if (walletError || !walletData || walletData.balance < bidAmount) {
-    statusMessage.textContent = '❌ Insufficient wallet balance.';
-    return;
-  }
-
-  const { data: previousBids } = await supabaseClient
-    .from('bid')
-    .select('bidder_id, bid_amount')
-    .eq('auction_id', auctionId)
-    .order('bid_amount', { ascending: false })
-    .limit(2);
-
-  await supabaseClient.from('bid').insert([
-    { auction_id: auctionId, bidder_id: userId, bid_amount: bidAmount }
-  ]);
-
-  await supabaseClient
-    .from('auction')
-    .update({ current_price: bidAmount })
-    .eq('id', auctionId);
-
-  const { data: auctionInfo } = await supabaseClient
-    .from('auction')
-    .select('product(name), seller_id')
-    .eq('id', auctionId)
-    .single();
-
-  const productName = auctionInfo.product?.name || 'your item';
-  const sellerUserId = auctionInfo.seller_id;
-
-  await supabaseClient.from('notifications').insert([
-    {
-      user_id: sellerUserId,
-      auction_id: auctionId,
-      message: `📢 Someone just placed a bid on your product: "${productName}"!`,
-      read: false
-    }
-  ]);
-
-  if (previousBids && previousBids.length > 1) {
-    const previousBidderId = previousBids[1].bidder_id;
-    if (previousBidderId !== userId) {
-      await supabaseClient.from('notifications').insert([
-        {
-          user_id: previousBidderId,
-          auction_id: auctionId,
-          message: `🔔 You've been outbid on "${productName}".`,
-          read: false
-        }
-      ]);
-    }
-  }
-
-  statusMessage.textContent = '✅ Bid placed successfully!';
   bidAmountInput.value = '';
 });
