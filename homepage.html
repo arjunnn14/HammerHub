@@ -305,9 +305,8 @@
     </div>
   </footer>
 
-  <script type="module" src="homepage.js"></script>
-  <script>
-  import { supabaseClient } from './supabase.js';
+  <script type="module" src="homepage.js">
+    import { supabaseClient } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -322,8 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector(".user-buttons").classList.add("hidden");
   }
 });
-
-  </script> 
-  
+</script>
+    
 </body>
 </html>
