@@ -116,8 +116,11 @@
       <span id="notification-badge" class="notification-badge hidden">0</span>
       <ul id="notification-list" class="notification-list hidden"></ul>
     </div>
-      <button class="auth-btn primary" onclick="window.location.href='login.html'">Log In</button>
-      <button class="auth-btn primary" onclick="window.location.href='signup.html'">Sign Up</button>
+    <button class="auth-btn " onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
+    <button class="auth-btn " onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
+    <button class="auth-btn " onclick="window.location.href='profile.html'">👤 Profile</button>
+    <button class="auth-btn primary" onclick="logout()">Log Out</button>
+    </div>
     </div>
   </header>
 
@@ -188,6 +191,29 @@
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
+
   <script type="module" src="homepage.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userPassword");
+      window.location.href = "login.html"; // Redirect to login page after logout
+    }
+  
+    // Show correct buttons based on login status
+    document.addEventListener("DOMContentLoaded", function () {
+      const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+  
+      const guestButtons = document.getElementById("guest-buttons");
+      const userButtons = document.getElementById("user-buttons");
+  
+      if (guestButtons && userButtons) {
+        guestButtons.style.display = isLoggedIn ? "none" : "flex";
+        userButtons.style.display = isLoggedIn ? "flex" : "none";
+      }
+    });
+  </script>
+  
 </body>
 </html>
