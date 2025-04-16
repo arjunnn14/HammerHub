@@ -137,6 +137,11 @@ async function checkAuthButtons() {
   }
 }
 
+document.querySelector("#signup-form").addEventListener("submit", function (e) {
+  e.preventDefault(); // prevent page reload
+  // your sign-up logic here
+});
+
 // 🚪 Logout
 async function logout() {
   const { error } = await supabaseClient.auth.signOut();
