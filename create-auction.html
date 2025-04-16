@@ -14,12 +14,12 @@
     }
 
     header {
-  background-color: #111;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #222;
-}
+      background-color: #111;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #222;
+    }
 
     .logo {
       height: 40px;
@@ -40,11 +40,17 @@
       cursor: pointer;
     }
 
-.auth-btn.primary {
-  background-color: var(--primary);
-  border: 1px solid var(--primary);
-  color: var(--white);
-}
+    .auth-btn.primary {
+      background-color: var(--primary);
+      border: 1px solid var(--primary);
+      color: var(--white);
+    }
+
+    .nav-right {
+      display: flex;
+      gap: 1rem;
+      margin-left: auto;
+    }
 
     main {
       display: flex;
@@ -168,14 +174,11 @@
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
-    .nav-right {
-  display: flex;
-  gap: 1rem;
-  margin-left: auto;
-}
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
     footer {
       background-color: #111;
       color: #888;
@@ -259,11 +262,11 @@
       .footer-container {
         grid-template-columns: 1fr;
       }
-      
+
       .footer-section {
         text-align: center;
       }
-      
+
       .social-links {
         justify-content: center;
       }
@@ -275,57 +278,50 @@
   <header>
     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <img src="logo.png" alt="HammerHub Logo" class="logo" id="logo-home" />
-  
+
       <div class="nav-right">
         <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
         <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
       </div>
     </div>
   </header>
-  
+
   <main>
     <form id="create-auction-form">
       <h2>Create Auction</h2>
 
-      <!-- Product Name -->
       <div class="form-group">
         <input type="text" id="product-name" placeholder="Product Name" required />
       </div>
 
-      <!-- Description -->
       <div class="form-group">
         <textarea id="product-description" placeholder="Product Description" required></textarea>
       </div>
 
-      <!-- Category Dropdown -->
       <div class="form-group">
         <select id="category-select" required>
           <option value="" disabled selected>Select Category</option>
         </select>
       </div>
 
-      <!-- Image Upload -->
+      <!-- ✅ Updated input ID to match JS -->
       <div class="form-group">
-        <input type="file" id="product-images" name="product-images" accept="image/*" multiple required>
+        <input type="file" id="product-image" name="product-image" accept="image/*" required>
       </div>
       <div id="image-preview"></div>
 
-      <!-- Starting Price -->
       <div class="form-group">
         <input type="number" id="starting-price" placeholder="Starting Price (₹)" min="1" required />
       </div>
 
-      <!-- End Time -->
       <div class="form-group">
         <input type="datetime-local" id="end-time" required />
       </div>
 
-      <!-- Submit -->
       <button type="submit" id="submit-button">Create Auction</button>
       <div id="status-message"></div>
     </form>
 
-    <!-- Preview Card (optional) -->
     <div class="preview-card" id="live-preview" style="display:none;">
       <img id="preview-image" src="" alt="Preview Image" />
       <h3 id="preview-title"></h3>
@@ -344,7 +340,7 @@
           <li><a href="blog.html">Blog</a></li>
         </ul>
       </div>
-      
+
       <div class="footer-section">
         <h3>Help & Support</h3>
         <ul>
@@ -354,7 +350,7 @@
           <li><a href="contact.html">Contact Us</a></li>
         </ul>
       </div>
-      
+
       <div class="footer-section">
         <h3>Legal</h3>
         <ul>
@@ -364,7 +360,7 @@
           <li><a href="shipping.html">Shipping Policy</a></li>
         </ul>
       </div>
-      
+
       <div class="footer-section">
         <h3>Connect With Us</h3>
         <div class="social-links">
@@ -380,13 +376,12 @@
         </div>
       </div>
     </div>
-    
+
     <div class="footer">
       <p>© 2025 HammerHub. All rights reserved.</p>
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
-  
 
   <!-- JS Dependencies -->
   <script type="module" src="create-auction.js"></script>
@@ -394,9 +389,6 @@
     document.getElementById('logo-home').addEventListener('click', () => {
       window.location.href = 'homepage.html';
     });
-
   </script>
-
 </body>
 </html>
-
