@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabase.js';
-import './notification.js'; // Make sure this is only imported ONCE per page
+import { loadNotifications, listenForNewNotifications } from './notification.js';
+
 
 
 const urlParams = new URLSearchParams(window.location.search);
