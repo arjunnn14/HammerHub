@@ -127,3 +127,60 @@ window.logout = async function () {
   await supabaseClient.auth.signOut();
   window.location.href = 'homepage.html';
 };
+
+async function fetchFeaturedAuctions(matchingProductIds = null) {
+  const auctionList = document.getElementById('auction-list');
+  const heading = document.getElementById('greeting-text');
+  auctionList.innerHTML = 'Loading auctions...';
+
+  // If explicitly empty list passed, exit early
+  if (matchingProductIds && matchingProductIds.length === 0) {
+    heading.innerText = 'No Live Auctions';
+    auctionList.innerHTML = 'No auctions found.';
+    return;
+  }
+
+  let query = supabaseClient
+    .from('auction')
+    .select('id, current_price, end_time, product:product!auction_product_id_fkey(name, image_url, id, category_id)')
+    .order('end_time', { ascending: true });
+
+  if (matchingProductIds) {
+    query = query.in('product_id', matchingProductIds);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('❌ Fetch error:', error);
+    auctionList.innerHTML = 'Failed to load auctions.';
+    heading.innerText = 'Auction Error';
+    return;
+  }
+
+  const now = new Date();
+  const validAuctions = data.filter(auction => new Date(auction.end_time) > now);
+
+  if (validAuctions.length === 0) {
+    heading.innerText = 'No Live Auctions';
+    auctionList.innerHTML = 'No auctions found.';
+    return;
+  }
+
+  heading.innerText = 'Live Auctions';
+  auctionList.innerHTML = '';
+
+  validAuctions.forEach(auction => {
+    const div = document.createElement('div');
+    div.className = 'auction-card';
+
+    div.innerHTML = `
+      <img src="${auction.product?.image_url || 'placeholder.jpg'}" alt="${auction.product?.name || 'No Name'}" class="auction-thumb" />
+      <h3>${auction.product?.name || 'Unnamed Product'}</h3>
+      <p>Current Bid: ₹${auction.current_price}</p>
+      <button class="yellow-btn" onclick="location.href='auction-details.html?id=${auction.id}'">View Auction</button>
+    `;
+
+    auctionList.appendChild(div);
+  });
+}
