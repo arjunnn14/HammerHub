@@ -10,18 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSearch();
   setupCategoryFilter();
   loadNotifications();
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try {
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) throw error;
-      
-      localStorage.clear();
-      window.location.href = 'login.html';
-    } catch (error) {
-      console.error('Logout failed:', error);
-      alert('Logout failed. Please try again.');
-    }
-  });
 });
 
 // 🔥 Fetch Auctions & Remove Expired Ones
@@ -191,3 +179,16 @@ async function logout() {
     alert('An unexpected error occurred during logout.');
   }
 }
+document.getElementById('logout-btn')?.addEventListener('click', async () => {
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+
+    // Clear localStorage and redirect
+    localStorage.clear();
+    window.location.href = 'login.html';
+  } catch (error) {
+    console.error('Logout failed:', error.message || error);
+    alert('Logout failed. Please try again.');
+  }
+});
