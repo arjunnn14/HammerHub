@@ -70,16 +70,17 @@
     }
 
     .hidden {
-  display: none !important;
-}
+      display: none !important;
+    }
 
-.visible-flex {
-  display: flex;
-}
+    .visible-flex {
+      display: flex;
+    }
 
-.visible-block {
-  display: block;
-}
+    .visible-block {
+      display: block;
+    }
+
     .categories {
       background-color: #181818;
       padding: 1rem 0;
@@ -124,23 +125,23 @@
       <span id="notification-bell">🔔</span>
 
       <!-- Guest Buttons -->
-      <div id="guest-buttons" style="display: flex">
+      <div id="guest-buttons" class="visible-flex">
         <button onclick="window.location.href='login.html'" class="auth-btn">Login</button>
         <button onclick="window.location.href='signup.html'" class="auth-btn">Sign Up</button>
       </div>
 
       <!-- User Buttons -->
-      <div id="user-buttons" style="display: flex;">
+      <div id="user-buttons" class="hidden">
         <button onclick="window.location.href='create-auction.html'" class="nav-btn">➕ Create Auction</button>
         <button onclick="window.location.href='watchlist.html'" class="nav-btn">⭐ Watchlist</button>
         <button onclick="window.location.href='profile.html'" class="nav-btn">🧍‍♂️ Profile</button>
-       <<button onclick="logout()" class="nav-btn">Log Out</button>Log Out</button>
+        <button onclick="logout()" class="nav-btn" id="logout-btn">Log Out</button>
       </div>
     </div>
   </header>
 
   <nav class="categories">
-    <ul class="centered-categories">
+    <ul class="centered-categories" id="category-list">
       <li><a href="#" data-category="Electronics">Electronics</a></li>
       <li><a href="#" data-category="Sneakers">Sneakers</a></li>
       <li><a href="#" data-category="Apparel">Apparel</a></li>
@@ -162,6 +163,7 @@
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
-<script type="module" src="homepage.js"></script>
+
+  <script type="module" src="homepage.js"></script>
 </body>
 </html>
