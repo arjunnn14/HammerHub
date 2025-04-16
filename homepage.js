@@ -137,19 +137,22 @@ function setupCategoryFilter() {
 }
 
 // 👤 Auth Buttons Handling
+// 👤 Auth Buttons Handling - Updated version with classList
 async function checkAuthButtons() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   const guestButtons = document.getElementById('guest-buttons');
   const userButtons = document.getElementById('user-buttons');
 
-  if (session && session.user) {
-    // User is logged in
-    guestButtons.style.display = 'none';
-    userButtons.style.display = 'flex';
+  if (session?.user) {
+    // User is logged in - show user buttons, hide guest buttons
+    guestButtons.classList.add('hidden');
+    userButtons.classList.add('visible-flex');
+    userButtons.classList.remove('hidden');
   } else {
-    // User is not logged in
-    guestButtons.style.display = 'flex';
-    userButtons.style.display = 'none';
+    // User is not logged in - show guest buttons, hide user buttons
+    guestButtons.classList.remove('hidden');
+    guestButtons.classList.add('visible-flex');
+    userButtons.classList.add('hidden');
   }
 }
 
