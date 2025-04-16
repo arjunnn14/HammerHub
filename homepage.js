@@ -5,6 +5,8 @@ let currentUserId = null;
 document.addEventListener('DOMContentLoaded', async () => {
   await checkUserAuth();
   await loadNotifications();
+  await fetchFeaturedAuctions();
+  await fetchAndDisplayNotifications();
 });
 
 async function checkUserAuth() {
