@@ -6,167 +6,130 @@
   <title>HammerHub - Home</title>
   <link rel="stylesheet" href="stylesheet.css" />
   <style>
-    /* Add this style section for the footer improvements */
-    footer {
-      background-color: #111;
-      color: #888;
-      padding: 2.5rem 1.5rem;
-      border-top: 1px solid #222;
+    body {
+      margin: 0;
+      background-color: #1a1a1a;
+      color: #fff;
       font-family: 'Segoe UI', sans-serif;
     }
 
-    .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 2rem;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #1a1a1a;
     }
 
-    .footer-section {
-      margin-bottom: 1.5rem;
+    header img {
+      height: 50px;
+      cursor: pointer;
     }
 
-    .footer-section h3 {
+    .search-container {
+      flex: 1;
+      margin: 0 1rem;
+    }
+
+    .search-container input {
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #111;
+      border: none;
+      border-radius: 0.4rem;
+      color: #ccc;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #notification-bell {
+      font-size: 1.5rem;
       color: #facc15;
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
+      cursor: pointer;
     }
 
-    .footer-section ul {
+    .auth-btn,
+    .nav-btn {
+      background-color: transparent;
+      color: white;
+      border: 1px solid white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.4rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .auth-btn:hover,
+    .nav-btn:hover {
+      background-color: #333;
+    }
+
+    .categories {
+      background-color: #181818;
+      padding: 1rem 0;
+    }
+
+    .centered-categories {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
       list-style: none;
       padding: 0;
       margin: 0;
     }
 
-    .footer-section li {
-      margin-bottom: 0.6rem;
-    }
-
-    .footer-section a {
-      color: #aaa;
+    .centered-categories a {
+      color: white;
       text-decoration: none;
-      transition: color 0.3s ease;
+      font-weight: bold;
     }
 
-    .footer-section a:hover {
-      color: #facc15;
+    .auction-grid {
+      padding: 2rem;
     }
 
-    .footer-bottom {
-      text-align: center;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
+    footer {
+      background-color: #111;
+      color: #888;
+      padding: 2.5rem 1.5rem;
       border-top: 1px solid #222;
-      font-size: 0.85rem;
     }
-
-    .footer-bottom p {
-      margin: 0.5rem 0;
-    }
-
-    .footer-bottom a {
-      color: #facc15;
-      text-decoration: none;
-    }
-
-    .social-links {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .social-links a {
-      color: #aaa;
-      font-size: 1.2rem;
-      transition: color 0.3s ease;
-    }
-
-    .social-links a:hover {
-      color: #facc15;
-    }
-
-    @media (max-width: 768px) {
-      .footer-container {
-        grid-template-columns: 1fr;
-      }
-      
-      .footer-section {
-        text-align: center;
-      }
-      
-      .social-links {
-        justify-content: center;
-      }
-    }
-    .guest-buttons {
-  display: none; /* Initially hidden, controlled by JS */
-  justify-content: flex-end;
-  padding: 1rem;
-  gap: 1rem;
-  background-color: #1a1a1a;
-}
-
-.guest-buttons button {
-  background-color: #facc15;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  color: #000;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.guest-buttons button:hover {
-  background-color: #eab308;
-}
-    .auth-btn {
-  background-color: #f59e0b;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-    .auth-btn:hover {
-  background-color: #d97706;
-}
-
   </style>
 </head>
 <body>
   <header>
-    <div class="logo-search">
-      <a href="homepage.html">
-        <img src="logo.png" alt="HammerHub Logo" class="logo animated-logo" id="logo-home" />
-      </a>
-      <div class="search-container">
-        <input type="text" id="search-input" placeholder="Search for brand, electronics, etc." />
+    <img src="logo.png" alt="HammerHub" onclick="window.location.href='homepage.html'" />
+
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search for brand, electronics, etc." />
+    </div>
+
+    <div class="header-right">
+      <span id="notification-bell">🔔</span>
+
+      <!-- Guest Buttons -->
+      <div id="guest-buttons" style="display: none;">
+        <button onclick="window.location.href='login.html'" class="auth-btn">Login</button>
+        <button onclick="window.location.href='signup.html'" class="auth-btn">Sign Up</button>
       </div>
-    </div>
-    <body>
-  <!-- Guest Auth Buttons -->
-  <div id="guest-buttons" style="display: none; justify-content: flex-end; padding: 1rem;">
-    <button onclick="window.location.href='login.html'">Login</button>
-    <button onclick="window.location.href='signup.html'">Sign Up</button>
-  </div>
 
-    <div class="notification-wrapper">
-      <span id="notification-bell" class="">🔔</span>
-      <span id="notification-badge" class="notification-badge hidden">0</span>
-      <ul id="notification-list" class="notification-list hidden"></ul>
-    </div>
-     <div class="auth-buttons"></div>
-
+      <!-- User Buttons -->
+      <div id="user-buttons" style="display: none;">
+        <button onclick="window.location.href='create-auction.html'" class="nav-btn">➕ Create Auction</button>
+        <button onclick="window.location.href='watchlist.html'" class="nav-btn">⭐ Watchlist</button>
+        <button onclick="window.location.href='profile.html'" class="nav-btn">🧍‍♂️ Profile</button>
+        <button class="nav-btn" onclick="logout()">Log Out</button>
+      </div>
     </div>
   </header>
 
   <nav class="categories">
-    <ul id="category-list" class="centered-categories">
+    <ul class="centered-categories">
       <li><a href="#" data-category="Electronics">Electronics</a></li>
       <li><a href="#" data-category="Sneakers">Sneakers</a></li>
       <li><a href="#" data-category="Apparel">Apparel</a></li>
@@ -181,82 +144,35 @@
 
   <footer>
     <div class="footer-container">
-      <div class="footer-section">
-        <h3>About HammerHub</h3>
-        <ul>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="careers.html">Careers</a></li>
-          <li><a href="press.html">Press</a></li>
-          <li><a href="blog.html">Blog</a></li>
-        </ul>
-      </div>
-      
-      <div class="footer-section">
-        <h3>Help & Support</h3>
-        <ul>
-          <li><a href="help.html">Help Center</a></li>
-          <li><a href="safety.html">Safety Tips</a></li>
-          <li><a href="faq.html">FAQs</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-      </div>
-      
-      <div class="footer-section">
-        <h3>Legal</h3>
-        <ul>
-          <li><a href="terms.html">Terms of Service</a></li>
-          <li><a href="privacy.html">Privacy Policy</a></li>
-          <li><a href="cookie.html">Cookie Policy</a></li>
-          <li><a href="shipping.html">Shipping Policy</a></li>
-        </ul>
-      </div>
-      
-      <div class="footer-section">
-        <h3>Connect With Us</h3>
-        <div class="social-links">
-          <a href="#" aria-label="Twitter"><span>🐦</span></a>
-          <a href="#" aria-label="Facebook"><span>📘</span></a>
-          <a href="#" aria-label="Instagram"><span>📷</span></a>
-          <a href="#" aria-label="LinkedIn"><span>💼</span></a>
-        </div>
-        <p>Subscribe to our newsletter</p>
-        <div class="newsletter-form">
-          <input type="email" placeholder="Your email" />
-          <button class="subscribe-btn">Subscribe</button>
-        </div>
-      </div>
+      <!-- Add actual footer content here -->
     </div>
-    
     <div class="footer">
       <p>© 2025 HammerHub. All rights reserved.</p>
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
 
-  <script type="module" src="homepage.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-    const guestButtons = document.getElementById("guest-buttons");
-    const mainContent = document.getElementById("main-content");
+    document.addEventListener("DOMContentLoaded", function () {
+      const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+      const guestButtons = document.getElementById("guest-buttons");
+      const userButtons = document.getElementById("user-buttons");
 
-    if (isLoggedIn) {
-      guestButtons.style.display = "none";      // Hide Login/Signup
-      mainContent.style.display = "block";      // Show actual site content
-    } else {
-      guestButtons.style.display = "flex";      // Show Login/Signup
-      mainContent.style.display = "none";       // Hide actual site content
+      if (isLoggedIn) {
+        guestButtons.style.display = "none";
+        userButtons.style.display = "flex";
+      } else {
+        guestButtons.style.display = "flex";
+        userButtons.style.display = "none";
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userPassword");
+      window.location.href = "homepage.html";
     }
-  });
-
-  function logout() {
-    localStorage.removeItem("loggedIn");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userPassword");
-    window.location.href = "homepage.html";
-  }
-</script>
-
-
+  </script>
 </body>
 </html>
