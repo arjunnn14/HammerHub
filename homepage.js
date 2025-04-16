@@ -121,18 +121,18 @@ function setupCategoryFilter() {
 // 👤 Auth Buttons
 async function checkAuthButtons() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  const authButtons = document.getElementById('auth-buttons');
+
+  const guestButtons = document.getElementById('guest-buttons');
+  const userButtons = document.getElementById('user-buttons');
 
   if (session?.user) {
-    authButtons.innerHTML = `
-      <button class="auth-btn" id="create-auction-btn">➕ Create Auction</button>
-      <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
-      <button class="auth-btn" id="profile-btn">👤 Profile</button>
-      <button class="auth-btn primary" id="logout-btn">Logout</button>
-    `;
+    guestButtons.classList.add('hidden');
+    userButtons.classList.remove('hidden');
+
     document.getElementById('logout-btn').addEventListener('click', logout);
-    document.getElementById('profile-btn').addEventListener('click', () => window.location.href = 'profile.html');
-    document.getElementById('create-auction-btn').addEventListener('click', () => window.location.href = 'create-auction.html');
+  } else {
+    guestButtons.classList.remove('hidden');
+    userButtons.classList.add('hidden');
   }
 }
 
