@@ -21,7 +21,6 @@ let sellerId;
 
 let currentUserId;
 let currentAuctionId;
-let currentSlide = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!auctionId) {
@@ -119,33 +118,42 @@ async function loadAuctionDetails() {
   // Handle multiple images
   const imageSlider = document.getElementById('image-slider');
   const dotsContainer = document.getElementById('slider-dots');
-  imageSlider.innerHTML = '';
-  dotsContainer.innerHTML = '';
 
-  if (product.image_url && product.image_url.length > 0) {
-    // Create slides for each image
-    product.image_url.forEach((url, index) => {
-      const slide = document.createElement('div');
-      slide.className = 'slide';
-      slide.innerHTML = `<img src="${url}" alt="Product image ${index + 1}" />`;
-      imageSlider.appendChild(slide);
+  if (imageSlider && dotsContainer) {
+    imageSlider.innerHTML = '';
+    dotsContainer.innerHTML = '';
 
-      // Create navigation dot
-      const dot = document.createElement('div');
-      dot.className = 'slider-dot';
-      dot.dataset.index = index;
-      dot.addEventListener('click', () => showSlide(index));
-      dotsContainer.appendChild(dot);
-    });
+    if (product.image_url && product.image_url.length > 0) {
+      // Create slides for each image
+      product.image_url.forEach((url, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'slide';
+        slide.innerHTML = `<img src="${url}" alt="Product image ${index + 1}" />`;
+        imageSlider.appendChild(slide);
 
-    // Show first image
-    showSlide(0);
+        // Create navigation dot
+        const dot = document.createElement('div');
+        dot.className = 'slider-dot';
+        dot.dataset.index = index;
+        dot.addEventListener('click', () => showSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+
+      // Show first image
+      showSlide(0);
+    } else {
+      // Fallback if no images available
+      imageSlider.innerHTML = '<div class="slide"><p>No images available</p></div>';
+    }
   } else {
-    imageSlider.innerHTML = '<div class="slide"><p>No images available</p></div>';
+    console.warn('Image slider or dots container element not found!');
   }
 
+  // Set auction timing info
   endTime = new Date(data.end_time);
   sellerId = data.seller_id;
+
+  updateCountdown();
 }
 
 // Slide show function
@@ -155,13 +163,15 @@ function showSlide(index) {
 
   if (slides.length === 0) return;
 
+  // Handle wrap-around
   if (index >= slides.length) index = 0;
   if (index < 0) index = slides.length - 1;
 
+  // Update display
   slides.forEach(slide => slide.classList.remove('active'));
   slides[index].classList.add('active');
-  currentSlide = index;
 
+  // Update navigation dots
   dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
 }
 
@@ -186,8 +196,8 @@ function startCountdown() {
     endTimeEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
   }
 
-  const timerInterval = setInterval(updateCountdown, 1000);
   updateCountdown();
+  var timerInterval = setInterval(updateCountdown, 1000);
 }
 
 // Price polling every 3 seconds
@@ -234,13 +244,7 @@ bidForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const { data: previousBids } = await supabaseClient
-    .from('bid')
-    .select('bidder_id, bid_amount')
-    .eq('auction_id', auctionId)
-    .order('bid_amount', { ascending: false })
-    .limit(2);
-
+  // Insert the new bid
   const { error: insertError } = await supabaseClient.from('bid').insert([
     {
       auction_id: auctionId,
@@ -255,20 +259,59 @@ bidForm.addEventListener('submit', async (e) => {
     return;
   }
 
+  // Update the current price of the auction
   await supabaseClient
     .from('auction')
     .update({ current_price: bidAmount })
     .eq('id', auctionId);
 
-  const { data: auctionInfo } = await supabaseClient
-    .from('auction')
-    .select('product(name), seller_id')
-    .eq('id', auctionId)
-    .single();
-
-  const productName = auctionInfo?.product?.name || 'your item';
-  const sellerUserId = auctionInfo?.seller_id;
-
+  // Optionally, fetch updated auction information if needed
   statusMessage.textContent = '✅ Bid placed!';
   bidAmountInput.value = '';
 });
+
+// Helper functions
+
+async function checkAuctionExists(auctionId) {
+  const { data, error } = await supabaseClient
+    .from('auction')
+    .select('id')
+    .eq('id', auctionId)
+    .single();
+  return !error && data;
+}
+
+async function checkUserExists() {
+  const { data: userData } = await supabaseClient.auth.getUser();
+  return userData?.user?.id || null;
+}
+
+// Watchlist helper functions
+async function isInWatchlist(userId, auctionId) {
+  const { data } = await supabaseClient
+    .from('watchlist')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('auction_id', auctionId)
+    .maybeSingle();
+  return !!data;
+}
+
+async function addToWatchlist(userId, auctionId) {
+  await supabaseClient.from('watchlist').insert([{ user_id: userId, auction_id: auctionId }]);
+}
+
+async function removeFromWatchlist(userId, auctionId) {
+  await supabaseClient
+    .from('watchlist')
+    .delete()
+    .eq('user_id', userId)
+    .eq('auction_id', auctionId);
+}
+
+// Newly defined function to check the watchlist status
+async function checkIfInWatchlist(userId, auctionId) {
+  const btn = document.getElementById('watchlist-btn');
+  const inList = await isInWatchlist(userId, auctionId);
+  btn.textContent = inList ? '✅ In Watchlist' : '⭐ Add to Watchlist';
+}
