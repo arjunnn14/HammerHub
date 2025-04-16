@@ -1,5 +1,6 @@
 import { supabaseClient } from './supabase.js';
-import { loadNotifications} from './notification.js';
+import { loadNotifications } from './notification.js';
+
 
 
 
@@ -34,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   startCountdown();
   startPricePolling();
 
+  await loadNotifications(); // ✅ move it here
+
   const { data: userData } = await supabaseClient.auth.getUser();
   currentUserId = userData?.user?.id;
   currentAuctionId = auctionId;
@@ -41,7 +44,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (currentUserId && currentAuctionId) {
     checkIfInWatchlist(currentUserId, currentAuctionId);
   }
-
   // Watchlist button
   document.getElementById('watchlist-btn').addEventListener('click', async () => {
     const inList = await isInWatchlist(currentUserId, currentAuctionId);
@@ -276,7 +278,7 @@ async function checkIfInWatchlist(userId, auctionId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadNotifications();             // Load existing notifications
-  listenForNewNotifications();     // Real-time updates (optional)
+  loadNotifications(); // ✅ this is enough
 });
+
 
