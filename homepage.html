@@ -99,6 +99,29 @@
         justify-content: center;
       }
     }
+    .guest-buttons {
+  display: none; /* Initially hidden, controlled by JS */
+  justify-content: flex-end;
+  padding: 1rem;
+  gap: 1rem;
+  background-color: #1a1a1a;
+}
+
+.guest-buttons button {
+  background-color: #facc15;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.guest-buttons button:hover {
+  background-color: #eab308;
+}
+
   </style>
 </head>
 <body>
@@ -111,6 +134,13 @@
         <input type="text" id="search-input" placeholder="Search for brand, electronics, etc." />
       </div>
     </div>
+    <body>
+  <!-- Guest Auth Buttons -->
+  <div id="guest-buttons" style="display: none; justify-content: flex-end; padding: 1rem;">
+    <button onclick="window.location.href='login.html'">Login</button>
+    <button onclick="window.location.href='signup.html'">Sign Up</button>
+  </div>
+
     <div class="notification-wrapper">
       <span id="notification-bell" class="">🔔</span>
       <span id="notification-badge" class="notification-badge hidden">0</span>
@@ -191,26 +221,48 @@
 
   <script type="module" src="homepage.js"></script>
   <script>
-    function logout() {
-      localStorage.removeItem("loggedIn");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userPassword");
-      window.location.href = "login.html"; // Redirect to login page after logout
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userPassword");
+    window.location.href = "homepage.html"; // Redirect to homepage
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+
+    const guestButtons = document.getElementById("guest-buttons");
+    const mainContent = document.getElementById("main-content");
+
+    if (isLoggedIn) {
+      guestButtons.style.display = "none";
+      mainContent.style.display = "block";
+    } else {
+      guestButtons.style.display = "flex";
+      mainContent.style.display = "none";
     }
-  
-    // Show correct buttons based on login status
-    document.addEventListener("DOMContentLoaded", function () {
-      const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-  
-      const guestButtons = document.getElementById("guest-buttons");
-      const userButtons = document.getElementById("user-buttons");
-  
-      if (guestButtons && userButtons) {
-        guestButtons.style.display = isLoggedIn ? "none" : "flex";
-        userButtons.style.display = isLoggedIn ? "flex" : "none";
-      }
+
+    // Bell Icon functionality
+    const bell = document.getElementById("notification-bell");
+    const list = document.getElementById("notification-list");
+    const badge = document.getElementById("notification-badge");
+
+    bell.addEventListener("click", () => {
+      list.classList.toggle("hidden");
     });
-  </script>
-  
+
+    // Dummy Notifications
+    const notifications = ["Auction ending soon!", "New bid on your item!", "You've won an auction!"];
+    badge.textContent = notifications.length;
+    badge.classList.remove("hidden");
+    
+    notifications.forEach(note => {
+      const li = document.createElement("li");
+      li.textContent = note;
+      list.appendChild(li);
+    });
+  });
+</script>
+
 </body>
 </html>
