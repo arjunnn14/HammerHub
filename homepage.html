@@ -121,6 +121,20 @@
 .guest-buttons button:hover {
   background-color: #eab308;
 }
+    .auth-btn {
+  background-color: #f59e0b;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+    .auth-btn:hover {
+  background-color: #d97706;
+}
 
   </style>
 </head>
@@ -221,48 +235,28 @@
 
   <script type="module" src="homepage.js"></script>
   <script>
-  function logout() {
-    localStorage.removeItem("loggedIn");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userPassword");
-    window.location.href = "homepage.html"; // Redirect to homepage
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
     const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-
     const guestButtons = document.getElementById("guest-buttons");
     const mainContent = document.getElementById("main-content");
 
     if (isLoggedIn) {
-      guestButtons.style.display = "none";
-      mainContent.style.display = "block";
+      guestButtons.style.display = "none";      // Hide Login/Signup
+      mainContent.style.display = "block";      // Show actual site content
     } else {
-      guestButtons.style.display = "flex";
-      mainContent.style.display = "none";
+      guestButtons.style.display = "flex";      // Show Login/Signup
+      mainContent.style.display = "none";       // Hide actual site content
     }
-
-    // Bell Icon functionality
-    const bell = document.getElementById("notification-bell");
-    const list = document.getElementById("notification-list");
-    const badge = document.getElementById("notification-badge");
-
-    bell.addEventListener("click", () => {
-      list.classList.toggle("hidden");
-    });
-
-    // Dummy Notifications
-    const notifications = ["Auction ending soon!", "New bid on your item!", "You've won an auction!"];
-    badge.textContent = notifications.length;
-    badge.classList.remove("hidden");
-    
-    notifications.forEach(note => {
-      const li = document.createElement("li");
-      li.textContent = note;
-      list.appendChild(li);
-    });
   });
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userPassword");
+    window.location.href = "homepage.html";
+  }
 </script>
+
 
 </body>
 </html>
