@@ -1,27 +1,16 @@
 import { supabaseClient } from './supabase.js';
+import { loadNotifications } from './notification.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Check auth state first
+  checkAuthButtons();
+  
+  // Then set up other functionality
   fetchFeaturedAuctions();
   setupSearch();
   setupCategoryFilter();
-  checkAuthButtons();
-}};
-
-document.addEventListener("DOMContentLoaded", function () {
-  const isLoggedIn = localStorage.getItem("loggedIn") === "true";
-  const guestButtons = document.getElementById("guest-buttons");
-  const userButtons = document.getElementById("user-buttons");
-
-  // Show relevant buttons based on login state
-  if (isLoggedIn) {
-    guestButtons.style.display = "none";
-    userButtons.style.display = "flex";
-  } else {
-    guestButtons.style.display = "flex";
-    userButtons.style.display = "none";
-  }
+  loadNotifications();
 });
-
 
 // 🔥 Fetch Auctions & Remove Expired Ones
 async function fetchFeaturedAuctions(matchingProductIds = null) {
@@ -80,7 +69,6 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
     auctionList.appendChild(div);
   });
 }
-
 
 // 🔍 Search Functionality
 function setupSearch() {
@@ -151,21 +139,17 @@ function setupCategoryFilter() {
 // 👤 Auth Buttons Handling
 async function checkAuthButtons() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  const authButtons = document.querySelector('.auth-buttons');
+  const guestButtons = document.getElementById('guest-buttons');
+  const userButtons = document.getElementById('user-buttons');
 
   if (session && session.user) {
-    authButtons.innerHTML = `
-      
-
-    `;
-
-    document.getElementById('logout-btn').addEventListener('click', logout);
-    document.getElementById('profile-btn').addEventListener('click', () => {
-      window.location.href = 'profile.html';
-    });
-    document.getElementById('create-auction-btn').addEventListener('click', () => {
-      window.location.href = 'create-auction.html';
-    });
+    // User is logged in
+    guestButtons.style.display = 'none';
+    userButtons.style.display = 'flex';
+  } else {
+    // User is not logged in
+    guestButtons.style.display = 'flex';
+    userButtons.style.display = 'none';
   }
 }
 
@@ -178,10 +162,3 @@ async function logout() {
     window.location.reload();
   }
 }
-
-// 🛎️ Notifications (You can keep or update this function as needed)
-import { loadNotifications } from './notification.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadNotifications();
-});
