@@ -13,7 +13,7 @@
       border-top: 1px solid #222;
       font-family: 'Segoe UI', sans-serif;
     }
- 
+
     .footer-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -21,37 +21,37 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 2rem;
     }
- 
+
     .footer-section {
       margin-bottom: 1.5rem;
     }
- 
+
     .footer-section h3 {
       color: #facc15;
       margin-bottom: 1rem;
       font-size: 1.1rem;
     }
- 
+
     .footer-section ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
- 
+
     .footer-section li {
       margin-bottom: 0.6rem;
     }
- 
+
     .footer-section a {
       color: #aaa;
       text-decoration: none;
       transition: color 0.3s ease;
     }
- 
+
     .footer-section a:hover {
       color: #facc15;
     }
- 
+
     .footer-bottom {
       text-align: center;
       margin-top: 2rem;
@@ -59,41 +59,41 @@
       border-top: 1px solid #222;
       font-size: 0.85rem;
     }
- 
+
     .footer-bottom p {
       margin: 0.5rem 0;
     }
- 
+
     .footer-bottom a {
       color: #facc15;
       text-decoration: none;
     }
- 
+
     .social-links {
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
     }
- 
+
     .social-links a {
       color: #aaa;
       font-size: 1.2rem;
       transition: color 0.3s ease;
     }
- 
+
     .social-links a:hover {
       color: #facc15;
     }
- 
+
     @media (max-width: 768px) {
       .footer-container {
         grid-template-columns: 1fr;
       }
-     
+      
       .footer-section {
         text-align: center;
       }
-     
+      
       .social-links {
         justify-content: center;
       }
@@ -104,7 +104,7 @@
       color: #fff;
       font-family: 'Segoe UI', sans-serif;
     }
- 
+
     header {
       display: flex;
       justify-content: space-between;
@@ -112,17 +112,17 @@
       padding: 1rem 2rem;
       background-color: #1a1a1a;
     }
- 
+
     header img {
       height: 50px;
       cursor: pointer;
     }
- 
+
     .search-container {
       flex: 1;
       margin: 0 1rem;
     }
- 
+
     .search-container input {
       width: 100%;
       padding: 0.5rem;
@@ -131,19 +131,19 @@
       border-radius: 0.4rem;
       color: #ccc;
     }
- 
+
     .header-right {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
- 
+
     .notification-bell {
       font-size: 1.5rem;
       color: #facc15;
       cursor: pointer;
     }
- 
+
     .auth-btn,
     .nav-btn {
       background-color: transparent;
@@ -156,29 +156,29 @@
       transition: background-color 0.3s ease;
       gap: 1rem;
     }
- 
+
     .auth-btn:hover,
     .nav-btn:hover {
       background-color: #333;
     }
- 
+
     .hidden {
       display: none !important;
     }
- 
+
     .visible-flex {
       display: flex;
     }
- 
+
     .visible-block {
       display: block;
     }
- 
+
     .categories {
       background-color: #181818;
       padding: 1rem 0;
     }
- 
+
     .centered-categories {
       display: flex;
       justify-content: center;
@@ -187,17 +187,17 @@
       padding: 0;
       margin: 0;
     }
- 
+
     .centered-categories a {
       color: white;
       text-decoration: none;
       font-weight: bold;
     }
- 
+
     .auction-grid {
       padding: 2rem;
     }
- 
+
     footer {
       background-color: #111;
       color: #888;
@@ -209,26 +209,24 @@
 <body>
   <header>
     <img src="logo.png" alt="HammerHub" onclick="window.location.href='homepage.html'" />
- 
+
     <div class="search-container">
       <input type="text" id="search-input" placeholder="Search for brand, electronics, etc." />
     </div>
- 
+
     <div class="auth-buttons"></div>
     <div class="notification-wrapper">
       <span id="notification-bell" class="">🔔</span>
       <span id="notification-badge" class="notification-badge hidden">0</span>
       <ul id="notification-list" class="notification-list hidden"></ul>
     </div>
- 
+
       <!-- Guest Buttons -->
       <div id="guest-buttons" class="visible-flex">
         <button onclick="window.location.href='login.html'" class="auth-btn">Login</button>
-        <a href="signup.html">
-        <button class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
-        </a>
+        <button onclick="window.location.href='signup.html'" class="auth-btn">Sign Up</button>
       </div>
- 
+
       <!-- User Buttons -->
       <div id="user-buttons" class="hidden">
         <button onclick="window.location.href='create-auction.html'" class="nav-btn">➕ Create Auction</button>
@@ -238,7 +236,7 @@
       </div>
     </div>
   </header>
- 
+
   <nav class="categories">
     <ul class="centered-categories" id="category-list">
       <li><a href="#" data-category="Electronics">Electronics</a></li>
@@ -247,13 +245,13 @@
       <li><a href="#" data-category="Other">Other</a></li>
     </ul>
   </nav>
- 
+
   <main>
     <h2 id="greeting-text">Live Auctions</h2>
     <div id="auction-list" class="auction-grid">Loading auctions...</div>
   </main>
- 
-  <<footer>
+
+  <footer>
     <div class="footer-container">
       <div class="footer-section">
         <h3>About HammerHub</h3>
@@ -264,7 +262,7 @@
           <li><a href="blog.html">Blog</a></li>
         </ul>
       </div>
-     
+      
       <div class="footer-section">
         <h3>Help & Support</h3>
         <ul>
@@ -274,7 +272,7 @@
           <li><a href="contact.html">Contact Us</a></li>
         </ul>
       </div>
-     
+      
       <div class="footer-section">
         <h3>Legal</h3>
         <ul>
@@ -284,7 +282,7 @@
           <li><a href="shipping.html">Shipping Policy</a></li>
         </ul>
       </div>
-     
+      
       <div class="footer-section">
         <h3>Connect With Us</h3>
         <div class="social-links">
@@ -300,12 +298,32 @@
         </div>
       </div>
     </div>
-   
+    
     <div class="footer">
       <p>© 2025 HammerHub. All rights reserved.</p>
       <p>Contact us: <a href="mailto:HammerHub@gmail.com" style="color: #facc15;">HammerHub@gmail.com</a> | 123 456 7890</p>
     </div>
   </footer>
+
   <script type="module" src="homepage.js"></script>
+  <script>
+  import { supabaseClient } from './supabase.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    // User is logged in
+    document.querySelector(".auth-buttons").classList.add("hidden");
+    document.querySelector(".user-buttons").classList.remove("hidden");
+  } else {
+    // User not logged in
+    document.querySelector(".auth-buttons").classList.remove("hidden");
+    document.querySelector(".user-buttons").classList.add("hidden");
+  }
+});
+
+  </script> 
+  
 </body>
 </html>
