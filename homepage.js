@@ -6,6 +6,32 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCategoryFilter();
   checkAuthButtons();
 });
+  document.addEventListener("DOMContentLoaded", function () {
+    const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+    const guestButtons = document.getElementById("guest-buttons");
+    const userButtons = document.getElementById("user-buttons");
+
+    // Debug logs
+    console.log("Logged in:", isLoggedIn);
+    console.log("Guest Buttons Element:", guestButtons);
+    console.log("User Buttons Element:", userButtons);
+
+    if (isLoggedIn) {
+      guestButtons.style.display = "none";
+      userButtons.style.display = "flex";
+    } else {
+      guestButtons.style.display = "flex";
+      userButtons.style.display = "none";
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userPassword");
+    window.location.href = "homepage.html";
+  }
+
 
 // 🔥 Fetch Auctions & Remove Expired Ones
 async function fetchFeaturedAuctions(matchingProductIds = null) {
