@@ -1,14 +1,10 @@
-// 📦 Imports
 import { supabaseClient } from './supabase.js';
-import { loadNotifications } from './notification.js';
 
-// 🔑 Main Initialization
 document.addEventListener('DOMContentLoaded', () => {
-  checkAuthButtons();
   fetchFeaturedAuctions();
   setupSearch();
   setupCategoryFilter();
-  loadNotifications();
+  checkAuthButtons();
 });
 
 // 🔥 Fetch Auctions & Remove Expired Ones
@@ -17,6 +13,7 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
   const heading = document.getElementById('greeting-text');
   auctionList.innerHTML = 'Loading auctions...';
 
+  // If explicitly empty list passed, exit early
   if (matchingProductIds && matchingProductIds.length === 0) {
     heading.innerText = 'No Live Auctions';
     auctionList.innerHTML = 'No auctions found.';
@@ -56,25 +53,27 @@ async function fetchFeaturedAuctions(matchingProductIds = null) {
   validAuctions.forEach(auction => {
     const div = document.createElement('div');
     div.className = 'auction-card';
+
     div.innerHTML = `
       <img src="${auction.product?.image_url || 'placeholder.jpg'}" alt="${auction.product?.name || 'No Name'}" class="auction-thumb" />
       <h3>${auction.product?.name || 'Unnamed Product'}</h3>
       <p>Current Bid: ₹${auction.current_price}</p>
       <button class="yellow-btn" onclick="location.href='auction-details.html?id=${auction.id}'">View Auction</button>
     `;
+
     auctionList.appendChild(div);
   });
 }
 
+
 // 🔍 Search Functionality
 function setupSearch() {
   const searchInput = document.querySelector('.search-container input');
-
   searchInput.addEventListener('input', async () => {
     const query = searchInput.value.trim().toLowerCase();
 
     if (query === '') {
-      fetchFeaturedAuctions();
+      fetchFeaturedAuctions(); // Show all
       return;
     }
 
@@ -136,40 +135,37 @@ function setupCategoryFilter() {
 // 👤 Auth Buttons Handling
 async function checkAuthButtons() {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  const guestButtons = document.getElementById('guest-buttons');
-  const userButtons = document.getElementById('user-buttons');
+  const authButtons = document.querySelector('.auth-buttons');
 
-  if (!guestButtons || !userButtons) return;
+  if (session && session.user) {
+    authButtons.innerHTML = `
+      
 
-  if (session?.user) {
-    guestButtons.classList.add('hidden');
-    guestButtons.classList.remove('visible-flex');
-    userButtons.classList.remove('hidden');
-    userButtons.classList.add('visible-flex');
-  } else {
-    userButtons.classList.add('hidden');
-    userButtons.classList.remove('visible-flex');
-    guestButtons.classList.remove('hidden');
-    guestButtons.classList.add('visible-flex');
+    `;
+
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('profile-btn').addEventListener('click', () => {
+      window.location.href = 'profile.html';
+    });
+    document.getElementById('create-auction-btn').addEventListener('click', () => {
+      window.location.href = 'create-auction.html';
+    });
   }
 }
 
-// 🚪 Logout Handler (global function for onclick="logout()")
-window.logout = async function () {
-  try {
-    const { error } = await supabaseClient.auth.signOut();
-
-    if (error) {
-      console.error('Logout error:', error.message);
-      alert('Logout failed. Please try again.');
-      return;
-    }
-
-    localStorage.removeItem('loggedIn');
-    sessionStorage.clear();
-    window.location.href = 'homepage.html';
-  } catch (err) {
-    console.error('Unexpected logout error:', err);
-    alert('An unexpected error occurred during logout.');
+// 🚪 Logout
+async function logout() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    console.error('Logout failed:', error.message);
+  } else {
+    window.location.reload();
   }
-};
+}
+
+// 🛎️ Notifications (You can keep or update this function as needed)
+import { loadNotifications } from './notification.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNotifications();
+});
