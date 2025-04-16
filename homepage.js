@@ -143,6 +143,7 @@ async function checkAuthButtons() {
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" id="profile-btn">👤 Profile</button>
       <button class="auth-btn primary" id="logout-btn">Logout</button>
+      <button class="auth-btn" id="notification-button">🔔</button>
     `;
 
     document.getElementById('logout-btn').addEventListener('click', logout);
