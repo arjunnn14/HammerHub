@@ -14,14 +14,12 @@
         <img src="logo.png" alt="HammerHub Logo" class="logo animated-logo" id="logo-home" />
       </a>
     </div>
-        <span id="notification-badge" class="notification-badge hidden">0</span>
-        <ul id="notification-list" class="notification-list hidden"></ul>
-      </div>
-
+    <div class="auth-buttons" id="auth-buttons">
+      <span id="notification-badge" class="notification-badge hidden">0</span>
+      <ul id="notification-list" class="notification-list hidden"></ul>
       <button class="auth-btn" onclick="window.location.href='create-auction.html'">➕ Create Auction</button>
       <button class="auth-btn" onclick="window.location.href='watchlist.html'">⭐ Watchlist</button>
       <button class="auth-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
-      
     </div>
   </header>
 
@@ -29,12 +27,15 @@
   <main class="auction-container">
     <h2 class="yellow-text" id="product-name">Auction Item</h2>
     <div class="auction-content">
-      <!-- Image -->
+      <!-- Image Section -->
       <div class="image-wrapper">
         <img id="auction-image" src="" alt="Product Image" />
       </div>
+      <!-- Additional image slider and dots -->
+      <div id="image-slider"></div>
+      <div id="slider-dots"></div>
 
-      <!-- Details -->
+      <!-- Auction Details -->
       <div class="auction-info-box">
         <p><span class="yellow-text">Description:</span> <span id="auction-description"></span></p>
         <p><span class="yellow-text">Category:</span> <span id="auction-category"></span></p>
@@ -49,7 +50,7 @@
           <button id="place-bid-btn" type="submit">Place Bid</button>
         </form>
 
-        <!-- ✅ Share button OUTSIDE the form -->
+        <!-- Share Auction Button -->
         <button id="share-auction-btn" type="button"
           title="Share this auction"
           style="background-color: #333; color: #fff; margin-top: 10px;">
@@ -69,6 +70,5 @@
 
   <script type="module" src="auction-details.js"></script>
   <script type="module" src="/js/notification.js"></script>
-
 </body>
 </html>
